@@ -80,9 +80,9 @@
 \section{Opis projektu}
 \label{sec:OpisProjektu}
 
-Celem projektu jest stworzenie theremina opartego na płytce rozwojowej STM32L476G-DISCO i dwóch cyfrowych czujnikach odległości VL53L1X korzystających z technologii Time-of-Flight. Dane z jednego czujnika będą wpływać na częstotliwość dźwięku a dane z drugiego na głośność. Aby uzyskać zamierzony efekt niezbędne będzie zaprogramowanie obsługi czujników oraz Audio DAC zawartego na płytce. 
+Celem projektu jest stworzenie theremina opartego na płytce rozwojowej STM32L476G-DISCO\cite{DevBoard} i dwóch cyfrowych czujnikach odległości VL53L1X\cite{VL53L1X} korzystających z technologii Time-of-Flight. Dane z jednego czujnika będą wpływać na częstotliwość dźwięku a dane z drugiego na głośność. Aby uzyskać zamierzony efekt niezbędne będzie zaprogramowanie obsługi czujników oraz Audio DAC\cite{CS43L22} zawartego na płytce. 
 
-Głównym zadaniem jest napisanie pełnego oprogramowania na MCU STM32L476VGT6 pozwalajacego na generowanie fali dźwiękowej (sinusoida). Modyfikacje do generowanej fali będą wprowadzane ruchami rąk (bliżej-dalej). Informacja na temat odległości będzie podawana przez czujniki VL53L1X. Na początku zostanie zaimplementowana funkcja generująca podstawową sinusoidę, funkcję tę później rozwiniemy tak, aby generowała ciekawe brzmienie.
+Głównym zadaniem jest napisanie pełnego oprogramowania na MCU STM32L476VGT6\cite{MCU} pozwalajacego na generowanie fali dźwiękowej (sinusoida). Modyfikacje do generowanej fali będą wprowadzane ruchami rąk (bliżej-dalej). Informacja na temat odległości będzie podawana przez czujniki VL53L1X. Na początku zostanie zaimplementowana funkcja generująca podstawową sinusoidę, funkcję tę później rozwiniemy tak, aby generowała ciekawe brzmienie.
 
 Czujniki będą się komunikować z MCU za pomocą protokołu $I^2C$. Ustawienia Audio DAC również będą realizowane za pomocą protokołu $I^2C$. Przekazanie próbek do Audio DAC odbędzie się za pomocą DMA.
 
@@ -102,21 +102,6 @@ Projekt będzie tworzony w języku C korzystając ze środowiska Atollic TrueSTU
  
 %Obecne we wszystkich dokumentach
 \section{Konfiguracja mikrokontrolera}
-
-Tutaj powinna znaleźć się konfigurację poszczególnych peryferiów 
-mikrokontrolera -- jeśli wykorzystywany jest np. ADC to należy 
-podać jego konfigurację nie zapominając o DMA jeśli jest 
-wykorzystywane. Proszę wzorować się na raporcie wygenerowanym 
-z programu STM32CubeMx 
-(plik PDF i TXT, Project -> Generate Report Ctrl+R). 
-W pliku PDF jest to rozdział \textit{IPs} and \textit{Middleware Configuration}. 
-Należy umieścić uproszczoną konfiguracje peryferiów w formie 
-tabelek (najistotniejsze parametry + parametry zmienione, pogrubione).
-Dodatkowo w pliku tekstowym (TXT) znajduje się konfiguracja pinów 
-mikrokontrolera, którą również należy zamieścić w raporcie.
-
-W przypadku, gdy projekt zakłada wykorzystanie większej liczby modułów
-sekcję tą należy podzielić na odrębne podsekcje.
 
 \begin{figure}[H]
 	\centering
@@ -156,48 +141,71 @@ sekcję tą należy podzielić na odrębne podsekcje.
 		\hline
 	\end{tabular}
 	\caption{Konfiguracja pinów mikrokontrolera}
-	\label{tab:PINOUT}	
+	\label{tab:KonfiguracjaPinów}	
 \end{table}
 
 %Obecne we wszystkich dokumentach
 \subsection{I2C}
-
-Przykładowa konfiguracja peryferium interfejsu szeregowego.
-Należy opisać do czego będzie wykorzystywany interfejs. 
-Zmiany, które odbiegają od standardowych w programie CubeMX 
-powinn być zaznaczone innym kolorem, jak to zostało pokazane 
-w tabeli \ref{tab:USART}.
-
 \begin{table}[H]
 	\centering
 	\begin{tabular}{|l|c|} \hline
 		\textbf{Parametr} & Wartość \\
 		\hline
-		\hline  \textbf{Baud Rate}&11520  \\\hline
-		\textbf{Word Length } & \textcolor{blue}{8 Bits (including parity)}\\\hline
+		\hline  \textbf{I2C Speed Mode}&Standard Mode  \\\hline
+		\textbf{I2C Speed Frequency} & 100kHz\\
+		\hline
+	\end{tabular}
+	\caption{Konfiguracja peryferium I2C}
+	\label{tab:I2C}
+\end{table}
+
+\subsection{UART}
+Peryferium skonfigurowano na potrzeby debugowania.
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|l|c|} \hline
+		\textbf{Parametr} & Wartość \\
+		\hline
+		\hline  \textbf{Baud Rate}&\textcolor{blue}{9600}\\\hline
+		\textbf{Word Length } & 8 Bits (including parity)\\\hline
 		\textbf{Parity} &  None\\
 		\hline
 		\textbf{Stop Bits}& 1\\
+		\hline
+		\textbf{Data Direction}& Receive and Transmit\\
 		\hline
 	\end{tabular}
 	\caption{Konfiguracja peryferium USART}
 	\label{tab:USART}
 \end{table}
 
+\subsection{DMA}
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|l|c|} \hline
+		\textbf{Parametr} & Wartość \\
+		\hline
+		\hline  \textbf{DMA request}& DAC\_CH1\\\hline
+		\textbf{Stream} & DMA1\_Channel3\\
+		\hline
+		\textbf{Direction} & Memory To Peripheral\\
+		\hline
+	\end{tabular}
+	\caption{Konfiguracja peryferium DMA}
+	\label{tab:DAC}
+\end{table}
 
 %Obecne w dokumencie do etapu I
 \section{Harmonogram pracy}
 
-Należy wstawić diagram Gantta oraz określić ścieżkę 
-krytyczną. Ponadto zaznaczyć i opisać kamienie milowe.
-
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.5\textwidth]{obraz.png}
+	\includegraphics[width=0.9\textwidth]{gantt_diagram.png}
 	\caption{Diagram Gantta}
 	\label{fig:DiagramGantta}
 \end{figure}
 
+Kolejne kamienie milowe pokrywają się z etapami wyszczególnionymi w podrozdziale Podział pracy.
 %Obecne w dokumencie do etapu I
 \subsection{Podział pracy}
 
@@ -217,8 +225,8 @@ krytyczną. Ponadto zaznaczyć i opisać kamienie milowe.
 		Implementacja obsługi Audio DAC & &
 		 	Implementacja obsługi czujników odległości&\\
 		\hline
-		Opracowanie algorytmu modulującego falę dźwiękową na podstawie danych z czujników odległosci & &
-		Opracowanie algorytmu modulującego falę dźwiękową na podstawie danych z czujników odległosci & \\
+		Opracowanie algorytmu generujacego falę dźwiękową na podstawie danych z czujników odległosci & &
+		Opracowanie algorytmu generującego falę dźwiękową na podstawie danych z czujników odległosci & \\
 		\hline
 		\end{tabular}
 	\caption{Podział pracy -- Etap II}
@@ -249,8 +257,6 @@ krytyczną. Ponadto zaznaczyć i opisać kamienie milowe.
 
 %Obecne we wszystkich dokumentach
 \section{Podsumowanie}
-
-Krótkie podsumowanie projektu
 
 \newpage
 \addcontentsline{toc}{section}{Bibilografia}
