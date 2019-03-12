@@ -22,7 +22,7 @@
 \newcommand{\projectname}{Theremin}
 
 %wpisz akronim projektu
-\newcommand{\acronim}{-}
+\newcommand{\acronim}{THR}
 
 %wpisz Imię i nazwisko oraz numer albumu
 \newcommand{\osobaA}{Cyprian \textsc{Hryniuk}, 235512}
@@ -80,14 +80,21 @@
 \section{Opis projektu}
 \label{sec:OpisProjektu}
 
-Projekt ma na celu stworzenie theremina, w którym rolę anten spełniać będą dwa czujniki odległości: jeden do określania częstotliwości fali dźwiękowej, a drugi do jej amplitudy. 
+Celem projektu jest stworzenie theremina opartego na płytce rozwojowej STM32L476G-DISCO i dwóch cyfrowych czujnikach odległości VL53L1X korzystających z technologii Time-of-Flight. Dane z jednego czujnika będą wpływać na częstotliwość dźwięku a dane z drugiego na głośność. Aby uzyskać zamierzony efekt niezbędne będzie zaprogramowanie obsługi czujników oraz Audio DAC zawartego na płytce. 
 
+Głównym zadaniem jest napisanie pełnego oprogramowania na MCU STM32L476VGT6 pozwalajacego na generowanie fali dźwiękowej (sinusoida). Modyfikacje do generowanej fali będą wprowadzane ruchami rąk (bliżej-dalej). Informacja na temat odległości będzie podawana przez czujniki VL53L1X. Na początku zostanie zaimplementowana funkcja generująca podstawową sinusoidę, funkcję tę później rozwiniemy tak, aby generowała ciekawe brzmienie.
+
+Czujniki będą się komunikować z MCU za pomocą protokołu $I^2C$. Ustawienia Audio DAC również będą realizowane za pomocą protokołu $I^2C$. Przekazanie próbek do Audio DAC odbędzie się za pomocą DMA.
+
+
+Projekt będzie tworzony w języku C korzystając ze środowiska Atollic TrueSTUDIO for STM32. Konfiguracja peryferiów zostanie zrealizowana przy pomocy programu STM32CubeMX. Wszelkie dokumenty dotyczące projektu będą powstawać w systemie składu tekstu \LaTeX. Na potrzeby projektu zostało założone zdalne repozytorium w hostingowanym serwisie internetowym \textit{github.com} korzystającym z systemu kontrolii wersji \textit{git}. Repozytorium jest publiczne i dostępne pod linkiem: \href{https://cyphry.github.io/dron/}{\textit{https://github.com/CypHry/Theremin}}
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.5\textwidth]{architektura.png}
 	\caption{Architektura systemu}
 	\label{fig:Architektura}
 \end{figure}
+
 
 %\section{Założenia projektowe}
 %?????
@@ -113,7 +120,7 @@ sekcję tą należy podzielić na odrębne podsekcje.
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.8\textwidth]{obraz.png}
+	\includegraphics[width=0.8\textwidth]{konfiguracja_mcu.png}
 	\caption{Konfiguracja wyjść mikrokontrolera w programie STM32CubeMX}
 	\label{fig:KonfiguracjaMikrokontrolera}
 \end{figure}
@@ -121,7 +128,7 @@ sekcję tą należy podzielić na odrębne podsekcje.
 \newpage
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.9\textheight,angle=90]{obraz.png}
+	\includegraphics[width=0.9\textheight,angle=90]{konfiguracja_clk.png}
 	\caption{Konfiguracja zegarów mikrokontrolera}
 	\label{fig:KonfiguracjaZegara}
 \end{figure}
@@ -135,28 +142,25 @@ sekcję tą należy podzielić na odrębne podsekcje.
 		\hline
 		Numer pinu	&	PIN & Tryb pracy & Funkcja/etykieta\\
 		\hline
-		2&	PC13 & ANTI\_TAMP	GPIO\_EXTI13	&B1 [Blue PushButton]\\
-		3&	PC14 & OSC32\_IN*	RCC\_OSC32\_IN	&\\
-		4&	PC15 & OSC32\_OUT*	RCC\_OSC32\_OUT	&\\
-		5&	PH0&  OSC\_IN*	RCC\_OSC\_IN	&\\
-		6&	PH1&  OSC\_OUT*&		RCC\_OSC\_OUT	\\
-		16&	PA2&	USART2\_TX&	USART\_TX\\
-		17&	PA3&	USART2\_RX&	USART\_RX\\
-		21&	PA5&	GPIO\_Output&	LD2 [Green Led]\\
-		29&	PB10&	I2C2\_SCL&	I2C\_SCL\\
-		41&	PA8&	TIM1\_CH1&	PWM1\\
-		46&	PA13*&	SYS\_JTMS-SWDIO&	TMS\\
-		49&	PA14*&	SYS\_JTCK-SWCLK&	TCK\\
-		55&	PB3*&	SYS\_JTDO-SWO&	SWO\\
-		62&	PB9&	I2C2\_SDA&	I2C\_SCL\\
+		8&	PC14 & OSC32\_IN &	RCC\_OSC32\_IN	\\
+		9&	PC15 & OSC32\_OUT &	RCC\_OSC32\_OUT	\\
+		12&	PH0 & OSC\_IN &	RCC\_OSC\_IN	\\
+		13&	PH1 & OSC\_OUT &	RCC\_OSC\_OUT	\\
+		39&	PE8 &	GPIO\_Output&	LD\_G [LED\_Green] \\
+		47&	PB10 &	I2C2\_SCL&	\\
+		48&	PB11 &	I2C2\_SDA&	\\
+		86&	PD5 &	USART2\_TX&	USART\_TX\\
+		87&	PD6 &	USART2\_RX&	USART\_RX\\
+		92&	PB6 &	I2C1\_SCL&	\\
+		93&	PB7 &	I2C1\_SDA&	\\
 		\hline
 	\end{tabular}
 	\caption{Konfiguracja pinów mikrokontrolera}
-	
+	\label{tab:PINOUT}	
 \end{table}
 
 %Obecne we wszystkich dokumentach
-\subsection{USART}
+\subsection{I2C}
 
 Przykładowa konfiguracja peryferium interfejsu szeregowego.
 Należy opisać do czego będzie wykorzystywany interfejs. 
@@ -196,16 +200,6 @@ krytyczną. Ponadto zaznaczyć i opisać kamienie milowe.
 
 %Obecne w dokumencie do etapu I
 \subsection{Podział pracy}
-
-\textbf{Każdy z członków grupy powinien w każdym etapie mieć wymienione od 2 do 4 zadań.}
-Przykładowa tabele podziału zadań dla etapu II 
-(Tab. \ref{tab:PodzialPracyEtap2}) oraz dla etapu III 
-(Tab. \ref{tab:PodzialPracyEtap3})
-zostały przedstawione poniżej. 
-Przy podziale prac nie uwzględniamy tworzenia dokumentacji projektu!
-
-Przykładowy podział prac dla projektu pod tytułem 
-"Automatyczny dyktafon rozmowy":
 
 \begin{table}[H]
 	\centering
