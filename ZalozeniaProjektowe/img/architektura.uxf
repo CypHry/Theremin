@@ -1,0 +1,25 @@
+<diagram program="umletino" version="14.3.0"><zoom_level>10</zoom_level><element><id>UMLClass</id><coordinates><x>490</x><y>430</y><w>140</w><h>110</h></coordinates><panel_attributes>*Mikrokontroler*
+STM32L476
+valign=center
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>260</x><y>450</y><w>150</w><h>80</h></coordinates><panel_attributes>*Czujnik odległości*
+VL53L1X
+valign=center
+halign=center</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>520</x><y>200</y><w>80</w><h>40</h></coordinates><panel_attributes>*Głośnik*
+valign=center
+halign=center</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>400</x><y>470</y><w>110</w><h>40</h></coordinates><panel_attributes>lt=&lt;&lt;&lt;-&gt;&gt;&gt;
+I2C</panel_attributes><additional_attributes>10;20;90;20</additional_attributes></element><element><id>Relation</id><coordinates><x>620</x><y>470</y><w>110</w><h>40</h></coordinates><panel_attributes>lt=&lt;&lt;&lt;-&gt;&gt;&gt;
+I2C</panel_attributes><additional_attributes>90;20;10;20</additional_attributes></element><element><id>Relation</id><coordinates><x>540</x><y>230</y><w>50</w><h>60</h></coordinates><panel_attributes>lt=)-
+</panel_attributes><additional_attributes>20;30;20;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>710</x><y>450</y><w>150</w><h>80</h></coordinates><panel_attributes>*Czujnik odległości*
+VL53L1X
+valign=center
+halign=center</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>210</x><y>300</y><w>700</w><h>270</h></coordinates><panel_attributes>lt=.
+valign=top
+halign=left
+fontsize=20
+*THEREMIN*
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>510</x><y>320</y><w>100</w><h>50</h></coordinates><panel_attributes>*DAC*
+CS43L22
+halign=center
+valign=center</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>550</x><y>360</y><w>80</w><h>90</h></coordinates><panel_attributes>lt=&lt;&lt;&lt;-
+I2C/DMA</panel_attributes><additional_attributes>10;10;10;70</additional_attributes></element><element><id>Relation</id><coordinates><x>550</x><y>270</y><w>30</w><h>70</h></coordinates><panel_attributes>lt=()-
+</panel_attributes><additional_attributes>10;10;10;50</additional_attributes></element></diagram>

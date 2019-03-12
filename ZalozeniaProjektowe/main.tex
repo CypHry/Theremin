@@ -38,7 +38,8 @@
 \documentclass[10pt, a4paper]{article}
 
 \include{preambula}
-	
+\graphicspath{{./img/}}
+
 \begin{document}
 
 \def\tablename{Tabela}	%zmienienie nazwy tabel z Tablica na Tabela
@@ -79,11 +80,11 @@
 \section{Opis projektu}
 \label{sec:OpisProjektu}
 
-Projekt ma na celu stworzenie theremina, w którym rolę anten spełniać będą dwa czujniki odległościowe - jeden do określania częstotliwości fali dźwiękowej, a drugi do jej amplitudy. 
+Projekt ma na celu stworzenie theremina, w którym rolę anten spełniać będą dwa czujniki odległości: jeden do określania częstotliwości fali dźwiękowej, a drugi do jej amplitudy. 
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.5\textwidth]{obraz.png}
+	\includegraphics[width=0.5\textwidth]{architektura.png}
 	\caption{Architektura systemu}
 	\label{fig:Architektura}
 \end{figure}
@@ -210,23 +211,21 @@ Przykładowy podział prac dla projektu pod tytułem
 	\begin{tabular}{|L{7cm}|L{0.8cm}||L{7cm}|L{0.8cm}|}
 		\hline
 		\hline
-		\textbf{Adam Babacki} & 
+		\textbf{Tomasz Masłoń} & 
 		\% & 
-		\textbf{Bartłomiej Cabacki} & \%\\
+		\textbf{Cyprian Hryniuk} & \%\\
 		\hline
 		\hline
 		Wstępna konfiguracja peryferiów w programie CubeMx		& &	
-		Wstępna konfiguracja peryferiów w programie CubeMx &\\
+		 	Wstępna konfiguracja peryferiów w programie CubeMx	&\\
 		\hline
-		Implementacja obsługi mikrofonu & &
-		Opracowanie algorytmu automatycznej detekcji rozmowy &\\
+		Implementacja obsługi Audio DAC & &
+		 	Implementacja obsługi czujników odległości&\\
 		\hline
-		Opracowanie sposobu przechowywania danych na zewnętrznej pamięci FLASH & &
-		Oprogramowanie testujące obsługę mikrofonu & \\
+		Opracowanie algorytmu modulującego falę dźwiękową na podstawie danych z czujników odległosci & &
+		Opracowanie algorytmu modulującego falę dźwiękową na podstawie danych z czujników odległosci & \\
 		\hline
-		Odtwarzanie dźwięku za pomocą Audio DAC & & &\\
-		\hline
-	\end{tabular}
+		\end{tabular}
 	\caption{Podział pracy -- Etap II}
 	\label{tab:PodzialPracyEtap2}
 \end{table}
@@ -236,21 +235,19 @@ Przykładowy podział prac dla projektu pod tytułem
 	\begin{tabular}{|L{7cm}|L{0.8cm}||L{7cm}|L{0.8cm}|}
 		\hline
 		\hline
-		\textbf{Adam Babacki} & 
+		\textbf{Tomasz Masłoń} & 
 		\% & 
-		\textbf{Bartłomiej Cabacki} & \%\\
+		\textbf{Cyprian Hryniuk} & \%\\
 		\hline
 		\hline
 		Finalna konfiguracja peryferiów w programie CubeMX		& &	
 		Finalna konfiguracja peryferiów w programie CubeMX &\\
 		\hline
-		Zapisywanie dźwięku na pamięć zewnętrzną FLASH  & &
-		Integracja modułów &\\
+		Opracowanie funkcji modyfikujących dźwięk  & &
+		Opracowanie funkcji modyfikujących dźwięk &\\
 		\hline
 		Obsługa wyświetlacza ciekłokrystalicznego & &
 		Obsługa joysticka & \\
-		\hline
-		 & & Interfejs użytkownika &\\
 		\hline
 	\end{tabular}
 	\caption{Podział pracy -- Etap III}
