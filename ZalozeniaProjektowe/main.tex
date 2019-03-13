@@ -82,7 +82,7 @@
 
 Celem projektu jest stworzenie theremina opartego na płytce rozwojowej STM32L476G-DISCO\cite{DevBoard} i dwóch cyfrowych czujnikach odległości VL53L1X\cite{VL53L1X} korzystających z technologii Time-of-Flight. Dane z jednego czujnika będą wpływać na częstotliwość dźwięku a dane z drugiego na głośność. Aby uzyskać zamierzony efekt niezbędne będzie zaprogramowanie obsługi czujników oraz Audio DAC\cite{CS43L22} zawartego na płytce. 
 
-Głównym zadaniem jest napisanie pełnego oprogramowania na MCU STM32L476VGT6\cite{MCU} pozwalajacego na generowanie fali dźwiękowej (sinusoida). Modyfikacje do generowanej fali będą wprowadzane ruchami rąk (bliżej-dalej). Informacja na temat odległości będzie podawana przez czujniki VL53L1X. Na początku zostanie zaimplementowana funkcja generująca podstawową sinusoidę, funkcję tę później rozwiniemy tak, aby generowała ciekawe brzmienie.
+Głównym zadaniem jest napisanie pełnego oprogramowania na MCU STM32L476VGT6\cite{MCU} pozwalajacego na generowanie fali dźwiękowej (sinusoida)\cite{AN3126}. Modyfikacje do generowanej fali będą wprowadzane ruchami rąk (bliżej-dalej). Informacja na temat odległości będzie podawana przez czujniki VL53L1X. Na początku zostanie zaimplementowana funkcja generująca podstawową sinusoidę, funkcję tę później rozwiniemy tak, aby generowała ciekawe brzmienie.
 
 Czujniki będą się komunikować z MCU za pomocą protokołu $I^2C$. Ustawienia Audio DAC również będą realizowane za pomocą protokołu $I^2C$. Przekazanie próbek do Audio DAC odbędzie się za pomocą DMA.
 
