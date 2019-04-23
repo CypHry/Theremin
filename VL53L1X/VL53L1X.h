@@ -12,7 +12,7 @@
 #include "stm32f4xx_hal.h"
 #include <stdbool.h>
 
-#define VL53L1X_ADDRESS_DEFAULT		0x29
+#define VL53L1X_ADDRESS_DEFAULT		(0x29<<1)
 #define	VL53L1X_TIMING_GUARD		4528
 #define VL53L1X_TARGET_RATE			0x0A00
 #define BASE_TIMEOUT 10
