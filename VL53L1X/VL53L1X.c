@@ -11,68 +11,45 @@
 
 void VL53L1X_writeReg(VL53L1X_DEV Dev, uint16_t reg, uint8_t value)
 {
-	uint8_t tmp_reg[2];
-	tmp_reg[0] = (reg >> 8);
-	tmp_reg[1] = reg &0xFF;
-
-	HAL_I2C_Mem_Write(Dev->I2cHandle, Dev->I2cDevAddr, tmp_reg, 2, &value, 1, BASE_TIMEOUT);
+	HAL_I2C_Mem_Write(Dev->I2cHandle, Dev->I2cDevAddr, reg, 2, &value, 1, BASE_TIMEOUT);
 }
 
 void VL53L1X_writeReg16Bit(VL53L1X_DEV Dev, uint16_t reg, uint16_t value)
 {
-	uint8_t tmp_reg[2];
-	tmp_reg[0] = (reg >> 8);
-	tmp_reg[1] = reg &0xFF;
-
 	uint8_t tmp [2];
 	*tmp = value>>8;
 	tmp[1] = value & 0x00FF;
-	HAL_I2C_Mem_Write(Dev->I2cHandle, Dev->I2cDevAddr, tmp_reg, 2, tmp, 2, BASE_TIMEOUT+2*BYTE_TIMEOUT);
+	HAL_I2C_Mem_Write(Dev->I2cHandle, Dev->I2cDevAddr, reg, 2, tmp, 2, BASE_TIMEOUT+2*BYTE_TIMEOUT);
 }
 void VL53L1X_writeReg32Bit(VL53L1X_DEV Dev, uint16_t reg, uint32_t value)
 {
-	uint8_t tmp_reg[2];
-	tmp_reg[0] = (reg >> 8);
-	tmp_reg[1] = reg &0xFF;
-
 	uint8_t tmp [4];
 	*tmp = (value>>24) & 0xFF;
 	tmp[1] = (value>>16) & 0xFF;
 	tmp[2] = (value>>8) & 0xFF;
 	tmp[3] = (value>0) & 0xFF;
-	HAL_I2C_Mem_Write(Dev->I2cHandle, Dev->I2cDevAddr, tmp_reg, 2, tmp, 4, BASE_TIMEOUT+4*BYTE_TIMEOUT);
+	HAL_I2C_Mem_Write(Dev->I2cHandle, Dev->I2cDevAddr, reg, 2, tmp, 4, BASE_TIMEOUT+4*BYTE_TIMEOUT);
 }
 
 uint8_t VL53L1X_readReg(VL53L1X_DEV Dev, uint16_t reg)
 {
-	uint8_t tmp_reg[2];
-	tmp_reg[0] = (reg >> 8);
-	tmp_reg[1] = reg &0xFF;
-
 	uint8_t value;
-	HAL_I2C_Mem_Read(Dev->I2cHandle, Dev->I2cDevAddr, tmp_reg, 2, &value, 1, BASE_TIMEOUT);
+	HAL_I2C_Mem_Read(Dev->I2cHandle, Dev->I2cDevAddr, reg, 2, &value, 1, BASE_TIMEOUT);
 	return value;
 }
 
 uint16_t VL53L1X_readReg16Bit(VL53L1X_DEV Dev, uint16_t reg)
 {
-	uint8_t tmp_reg[2];
-	tmp_reg[0] = (reg >> 8);
-	tmp_reg[1] = reg &0xFF;
-
 	uint8_t tmp[2];
-	HAL_I2C_Mem_Read(Dev->I2cHandle, Dev->I2cDevAddr, tmp_reg, 2, tmp, 2, BASE_TIMEOUT+2*BYTE_TIMEOUT);
+	HAL_I2C_Mem_Read(Dev->I2cHandle, Dev->I2cDevAddr, reg, 2, tmp, 2, BASE_TIMEOUT+2*BYTE_TIMEOUT);
 	return tmp[0]<<8 | tmp[1];
 }
 
 uint32_t VL53L1X_readReg32Bit(VL53L1X_DEV Dev, uint16_t reg)
 {
-	uint8_t tmp_reg[2];
-	tmp_reg[0] = (reg >> 8);
-	tmp_reg[1] = reg &0xFF;
 
 	uint8_t tmp[4];
-	HAL_I2C_Mem_Read(Dev->I2cHandle, Dev->I2cDevAddr, tmp_reg, 2, tmp, 4, BASE_TIMEOUT+4*BYTE_TIMEOUT);
+	HAL_I2C_Mem_Read(Dev->I2cHandle, Dev->I2cDevAddr, reg, 2, tmp, 4, BASE_TIMEOUT+4*BYTE_TIMEOUT);
 	return (tmp[0]<<24) | (tmp[1]<<16) | (tmp[2])<<8 | tmp[3];
 }
 
