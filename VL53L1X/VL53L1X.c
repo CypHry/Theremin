@@ -47,7 +47,6 @@ uint16_t VL53L1X_readReg16Bit(VL53L1X_DEV Dev, uint16_t reg)
 
 uint32_t VL53L1X_readReg32Bit(VL53L1X_DEV Dev, uint16_t reg)
 {
-
 	uint8_t tmp[4];
 	HAL_I2C_Mem_Read(Dev->I2cHandle, Dev->I2cDevAddr, reg, 2, tmp, 4, BASE_TIMEOUT+4*BYTE_TIMEOUT);
 	return (tmp[0]<<24) | (tmp[1]<<16) | (tmp[2])<<8 | tmp[3];
@@ -81,6 +80,9 @@ VL53L1X_Status VL53L1X_init(VL53L1X_DEV Dev)
 	}
 	if((VL53L1X_readReg(Dev, VL53L1_FIRMWARE__SYSTEM_STATUS) & 0x01) == 0)
 		return VL53L1X_TIMEOUT;
+
+	Dev->fast_osc_frequency = VL53L1X_readReg16Bit(Dev, VL53L1_OSC_MEASURED__FAST_OSC__FREQUENCY);
+	Dev->osc_calibrate_val = VL53L1X_readReg16Bit(Dev, VL53L1_RESULT__OSC_CALIBRATE_VAL);
 
 	VL53L1X_writeReg(Dev, VL53L1_PAD_I2C_HV__EXTSUP_CONFIG , VL53L1X_readReg(Dev, VL53L1_PAD_I2C_HV__EXTSUP_CONFIG));
 	VL53L1X_writeReg16Bit(Dev, VL53L1_DSS_CONFIG__TARGET_TOTAL_RATE_MCPS, VL53L1X_TARGET_RATE);
