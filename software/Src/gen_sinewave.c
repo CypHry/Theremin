@@ -8,10 +8,12 @@
 #include "gen_sinewave.h"
 
 
+uint32_t lookup[] = {128, 176, 217, 234, 255, 245, 217, 176, 128, 79, 38, 10, 1, 10, 38, 79};
 
-SineWave_init(SineWaveHandler hsin)
+
+void SineWave_init(SineWaveHandler hsin)
 {
-	hsin->data=sinewave;
+	hsin->data=lookup;
 }
 
 //void adjustAmplitude(int_8 amplitude)

@@ -71,8 +71,8 @@ I2C_HandleTypeDef hi2c1;
 TIM_HandleTypeDef htim6;
 
 /* USER CODE BEGIN PV */
-SineWave sin;
-SineWaveHandler hsin = &sin;
+SineWave sinwave;
+SineWaveHandler hsin = &sinwave;
 
 /* USER CODE END PV */
 
@@ -127,7 +127,9 @@ int main(void)
   /* USER CODE BEGIN 2 */
   SineWave_init(hsin);
   HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_8B_R, 0);
-  HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, hsin->data, 16, DAC_ALIGN_8B_R);
+  if(HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, hsin->data, 16, DAC_ALIGN_8B_R) != HAL_OK)
+	  while (1)
+		  ;
 
   if (HAL_TIM_Base_Start_IT(&htim6) != HAL_OK)
 	  while (1)

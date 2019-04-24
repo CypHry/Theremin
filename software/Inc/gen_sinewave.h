@@ -15,16 +15,21 @@
 #include <stdint.h>
 #include "arm_math.h"
 
-uint8_t sinewave[] = {128, 176, 217, 234, 255, 245, 217, 176, 128, 79, 38, 10, 1, 10, 38, 79};
+extern uint32_t lookup[];
 
 typedef struct
 {
 	uint16_t amp;
 	uint16_t freq;
-	uint8_t* data;
+	uint32_t* data;
 }SineWave;
 
 typedef SineWave *SineWaveHandler;
 
 //SineWave sin;
 //SineWaveHandler hsin = &sin;
+
+void SineWave_init(SineWaveHandler);
+
+
+#endif
