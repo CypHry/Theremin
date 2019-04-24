@@ -11,7 +11,7 @@
 
 void VL53L1X_writeReg(VL53L1X_DEV Dev, uint16_t reg, uint8_t value)
 {
-	HAL_I2C_Mem_Write(Dev->I2cHandle, Dev->I2cDevAddr, reg, 1, &value, 1, 100*BASE_TIMEOUT);
+	HAL_I2C_Mem_Write(Dev->I2cHandle, Dev->I2cDevAddr, reg, 2, &value, 1, BASE_TIMEOUT);
 }
 
 void VL53L1X_writeReg16Bit(VL53L1X_DEV Dev, uint16_t reg, uint16_t value)
@@ -19,7 +19,7 @@ void VL53L1X_writeReg16Bit(VL53L1X_DEV Dev, uint16_t reg, uint16_t value)
 	uint8_t tmp [2];
 	*tmp = value>>8;
 	tmp[1] = value & 0x00FF;
-	HAL_I2C_Mem_Write(Dev->I2cHandle, Dev->I2cDevAddr, reg, 1, tmp, 2, 100*BASE_TIMEOUT+2*BYTE_TIMEOUT);
+	HAL_I2C_Mem_Write(Dev->I2cHandle, Dev->I2cDevAddr, reg, 2, tmp, 2, BASE_TIMEOUT+2*BYTE_TIMEOUT);
 }
 void VL53L1X_writeReg32Bit(VL53L1X_DEV Dev, uint16_t reg, uint32_t value)
 {
@@ -28,27 +28,27 @@ void VL53L1X_writeReg32Bit(VL53L1X_DEV Dev, uint16_t reg, uint32_t value)
 	tmp[1] = (value>>16) & 0xFF;
 	tmp[2] = (value>>8) & 0xFF;
 	tmp[3] = (value>0) & 0xFF;
-	HAL_I2C_Mem_Write(Dev->I2cHandle, Dev->I2cDevAddr, reg, 1, tmp, 4, 100*BASE_TIMEOUT+4*BYTE_TIMEOUT);
+	HAL_I2C_Mem_Write(Dev->I2cHandle, Dev->I2cDevAddr, reg, 2, tmp, 4, BASE_TIMEOUT+4*BYTE_TIMEOUT);
 }
 
 uint8_t VL53L1X_readReg(VL53L1X_DEV Dev, uint16_t reg)
 {
 	uint8_t value;
-	HAL_I2C_Mem_Read(Dev->I2cHandle, Dev->I2cDevAddr, reg, 1, &value, 1, 100*BASE_TIMEOUT);
+	HAL_I2C_Mem_Read(Dev->I2cHandle, Dev->I2cDevAddr, reg, 2, &value, 1, BASE_TIMEOUT);
 	return value;
 }
 
 uint16_t VL53L1X_readReg16Bit(VL53L1X_DEV Dev, uint16_t reg)
 {
 	uint8_t tmp[2];
-	HAL_I2C_Mem_Read(Dev->I2cHandle, Dev->I2cDevAddr, reg, 1, tmp, 2, 100*BASE_TIMEOUT+2*BYTE_TIMEOUT);
+	HAL_I2C_Mem_Read(Dev->I2cHandle, Dev->I2cDevAddr, reg, 2, tmp, 2, BASE_TIMEOUT+2*BYTE_TIMEOUT);
 	return tmp[0]<<8 | tmp[1];
 }
 
 uint32_t VL53L1X_readReg32Bit(VL53L1X_DEV Dev, uint16_t reg)
 {
 	uint8_t tmp[4];
-	HAL_I2C_Mem_Read(Dev->I2cHandle, Dev->I2cDevAddr, reg, 1, tmp, 4, 100*BASE_TIMEOUT+4*BYTE_TIMEOUT);
+	HAL_I2C_Mem_Read(Dev->I2cHandle, Dev->I2cDevAddr, reg, 2, tmp, 4, BASE_TIMEOUT+4*BYTE_TIMEOUT);
 	return (tmp[0]<<24) | (tmp[1]<<16) | (tmp[2])<<8 | tmp[3];
 }
 
@@ -63,8 +63,6 @@ VL53L1X_Status VL53L1X_init(VL53L1X_DEV Dev)
 	Dev->saved_vhv_timeout = 0;
 	Dev->I2cDevAddr = VL53L1X_ADDRESS_DEFAULT;
 
-uint16_t temp = 0;
-temp = VL53L1X_readReg16Bit(Dev, VL53L1_IDENTIFICATION__MODEL_ID);
 	if (VL53L1X_readReg16Bit(Dev, VL53L1_IDENTIFICATION__MODEL_ID) != 0xEACC)
 		return VL53L1X_ERROR;
 
@@ -82,6 +80,9 @@ temp = VL53L1X_readReg16Bit(Dev, VL53L1_IDENTIFICATION__MODEL_ID);
 	}
 	if((VL53L1X_readReg(Dev, VL53L1_FIRMWARE__SYSTEM_STATUS) & 0x01) == 0)
 		return VL53L1X_TIMEOUT;
+
+	Dev->fast_osc_frequency = VL53L1X_readReg16Bit(Dev, VL53L1_OSC_MEASURED__FAST_OSC__FREQUENCY);
+	Dev->osc_calibrate_val = VL53L1X_readReg16Bit(Dev, VL53L1_RESULT__OSC_CALIBRATE_VAL);
 
 	VL53L1X_writeReg(Dev, VL53L1_PAD_I2C_HV__EXTSUP_CONFIG , VL53L1X_readReg(Dev, VL53L1_PAD_I2C_HV__EXTSUP_CONFIG));
 	VL53L1X_writeReg16Bit(Dev, VL53L1_DSS_CONFIG__TARGET_TOTAL_RATE_MCPS, VL53L1X_TARGET_RATE);

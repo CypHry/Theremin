@@ -15,17 +15,16 @@
 #include <stdint.h>
 #include "arm_math.h"
 
-#define DAC_OUTPUT_RATE 420000	// The update rate of the DAC in Hz
-#define DAC_SAMPLES_SIZE 10000	// The size of the DAC output buffer (Mult of 10)
+uint8_t sinewave[] = {128, 176, 217, 234, 255, 245, 217, 176, 128, 79, 38, 10, 1, 10, 38, 79};
 
-typedef struct {
-	uint16_t* dacData;
-	uint8_t bin;
+typedef struct
+{
+	uint16_t amp;
 	uint16_t freq;
-	uint8_t	amp;
-	uint16_t offset;
-}sineInfo;
+	uint8_t* data;
+}SineWave;
 
-void Fill_DAC_Half_Buffer(sineInfo* appState);
+typedef SineWave *SineWaveHandler;
 
-#endif /* GEN_SINEWAVE_H_ */
+//SineWave sin;
+//SineWaveHandler hsin = &sin;
