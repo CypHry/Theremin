@@ -357,11 +357,11 @@ void VL53L1X_setupManualCalibration(VL53L1X_DEV Dev)
 void VL53L1X_readResults(VL53L1X_DEV Dev, ResultBuffer* results)
 {
 	results->range_status = VL53L1X_readReg(Dev, VL53L1_RESULT__RANGE_STATUS);
-	results->final_crosstalk_corrected_range_mm_sd0 = VL53L1X_readReg(Dev, VL53L1_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0);
-	results->ambient_count_rate_mcps_sd0 = VL53L1X_readReg(Dev, VL53L1_RESULT__AMBIENT_COUNT_RATE_MCPS_SD0);
-	results->dss_actual_effective_spads_sd0 = VL53L1X_readReg(Dev, VL53L1_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD0);
+	results->final_crosstalk_corrected_range_mm_sd0 = VL53L1X_readReg16Bit(Dev, VL53L1_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0);
+	results->ambient_count_rate_mcps_sd0 = VL53L1X_readReg16Bit(Dev, VL53L1_RESULT__AMBIENT_COUNT_RATE_MCPS_SD0);
+	results->dss_actual_effective_spads_sd0 = VL53L1X_readReg16Bit(Dev, VL53L1_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD0);
 	results->peak_signal_count_rate_crosstalk_corrected_mcps_sd0 =
-			VL53L1X_readReg(Dev, VL53L1_RESULT__PEAK_SIGNAL_COUNT_RATE_CROSSTALK_CORRECTED_MCPS_SD0);
+			VL53L1X_readReg16Bit(Dev, VL53L1_RESULT__PEAK_SIGNAL_COUNT_RATE_CROSSTALK_CORRECTED_MCPS_SD0);
 }
 
 void VL53L1X_getRangingData(RangingData* data, ResultBuffer* results)
