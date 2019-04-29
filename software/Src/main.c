@@ -74,12 +74,6 @@ TIM_HandleTypeDef htim6;
 SineWave sinwave;
 SineWaveHandler hsin = &sinwave;
 
-VL53L1X_Dev_t vl53l1x;
-VL53L1X_DEV Dev = &vl53l1x;
-uint16_t range;
-ResultBuffer results;
-RangingData data;
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -131,22 +125,12 @@ int main(void)
   MX_DAC1_Init();
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
-//  SineWave_init(hsin);
-//  HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_8B_R, 0);
-//  if(HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, hsin->data, 16, DAC_ALIGN_8B_R) != HAL_OK)
-//	  while (1)
-//		  ;
-//
-//  if (HAL_TIM_Base_Start_IT(&htim6) != HAL_OK)
-//	  while (1)
-//		  ;
-  Dev->I2cHandle=&hi2c1;
-  Dev->I2cDevAddr=VL53L1X_ADDRESS_DEFAULT;
+  SineWave_init(hsin);
 
-  VL53L1X_init(Dev);
-  HAL_Delay(500);
-  VL53L1X_startContinuous(Dev, 50);
-  HAL_Delay(500);
+  HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_8B_R, 0);
+  HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, hsin->data, 16, DAC_ALIGN_8B_R);
+
+  HAL_TIM_Base_Start_IT(&htim6);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -156,7 +140,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	range = VL53L1X_read(Dev, &data, &results);
   }
   /* USER CODE END 3 */
 }
