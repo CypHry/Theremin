@@ -78,10 +78,12 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define TIM_PERIOD 500
+#define TIM_PRESCALER 0
 #define LD_Green_Pin GPIO_PIN_8
 #define LD_Green_GPIO_Port GPIOE
 /* USER CODE BEGIN Private defines */
-
+#define TIM_CLOCK 80000000
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

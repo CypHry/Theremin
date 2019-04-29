@@ -14,14 +14,19 @@
 #include "stm32l4xx.h"
 #include <stdint.h>
 #include "arm_math.h"
+#include "main.h"
 
-extern uint32_t lookup[];
+#define LOOKUP_SIZE 256
+#define MAX12BIT 4095
+#define MAX12BIT_2 (MAX12BIT>>1)
+
+extern uint16_t lookup[LOOKUP_SIZE];
 
 typedef struct
 {
-	uint16_t amp;
+	float32_t amp;
 	uint16_t freq;
-	uint32_t* data;
+	uint16_t* data;
 }SineWave;
 
 typedef SineWave *SineWaveHandler;
@@ -29,7 +34,9 @@ typedef SineWave *SineWaveHandler;
 //SineWave sin;
 //SineWaveHandler hsin = &sin;
 
-void SineWave_init(SineWaveHandler);
+void SineWave_init(SineWaveHandler hsin);
+void SineWave_generate(SineWaveHandler hsin);
+void SineWave_adjustFreq(SineWaveHandler hsin,  TIM_HandleTypeDef *htim);
 
 
 #endif
