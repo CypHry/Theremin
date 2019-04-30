@@ -52,7 +52,7 @@ void SineWave_init(SineWaveHandler hsin)
 void SineWave_generate(SineWaveHandler hsin, RangingData *data)
 {
 //	memcpy(hsin->data, lookup, LOOKUP_SIZE);
-	hsin->amp = 1.0*data->range_mm/1360;
+	hsin->amp = 1.0*data->range_mm/1700;
 
 	float32_t step = 2*PI/LOOKUP_SIZE;
 	float32_t pos = 0;

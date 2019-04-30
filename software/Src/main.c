@@ -138,15 +138,17 @@ int main(void)
   MX_TIM6_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  SineWave_init(hsin);
+  //SineWave_init(hsin);
+  uint16_t range;
 //  SineWave_generate(hsin);
 //  SineWave_adjustFreq(hsin, &htim6);
 //
-//  HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 0);
-//  HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, &lookup[0], 256, DAC_ALIGN_12B_R);
-////
-//  HAL_TIM_Base_Start_IT(&htim6);
+  HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 0);
+  HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, &lookup[0], 256, DAC_ALIGN_12B_R);
+//
+  HAL_TIM_Base_Start_IT(&htim6);
 
+  Dev->I2cHandle=&hi2c1;
 
   status = VL53L1X_init(Dev);
   VL53L1X_startContinuous(Dev, 50);
@@ -156,9 +158,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  VL53L1X_read(Dev, &data, &results);
-//	  SineWave_generate(hsin, &data);
-//	  SineWave_adjustFreq(hsin, &htim6);
+	  range = VL53L1X_read(Dev, &data, &results);
+	  SineWave_generate(hsin, &data);
+	  SineWave_adjustFreq(hsin, &htim6);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -276,7 +278,7 @@ static void MX_I2C1_Init(void)
 
   /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = 0x00702991;
+  hi2c1.Init.Timing = 0x10909CEC;
   hi2c1.Init.OwnAddress1 = 0;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
