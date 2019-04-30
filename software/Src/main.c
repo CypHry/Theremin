@@ -81,6 +81,8 @@ SineWaveHandler hsin = &sinwave;
 VL53L1X_Dev_t vl53l1x;
 VL53L1X_DEV Dev = &vl53l1x;
 
+uint16_t sampleShow = 0;
+
 
 /* USER CODE END PV */
 

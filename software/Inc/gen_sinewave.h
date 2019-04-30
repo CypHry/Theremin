@@ -22,6 +22,7 @@
 #define MAX12BIT_2 (MAX12BIT>>1)
 
 extern uint16_t lookup[LOOKUP_SIZE];
+extern uint16_t sampleShow;
 
 typedef struct
 {

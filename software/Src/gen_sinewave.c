@@ -61,6 +61,7 @@ void SineWave_generate(SineWaveHandler hsin, RangingData *data)
 	{
 		sample = hsin->amp*((arm_sin_f32(pos)+1)*(MAX12BIT_2));
 		lookup[i]= (uint16_t)sample;
+		sampleShow = lookup[i];
 		pos+=step;
 	}
 	//hsin->data = lookup;
