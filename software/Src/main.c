@@ -78,6 +78,10 @@ DMA_HandleTypeDef hdma_usart2_tx;
 SineWave sinwave;
 SineWaveHandler hsin = &sinwave;
 
+VL53L1X_Dev_t vl53l1x;
+VL53L1X_DEV Dev = &vl53l1x;
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -104,6 +108,9 @@ static void MX_USART2_UART_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+	RangingData data = {0};
+	ResultBuffer results = {0};
+	VL53L1X_Status status = VL53L1X_ERROR;
 
   /* USER CODE END 1 */
 
@@ -132,24 +139,26 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   SineWave_init(hsin);
-  SineWave_generate(hsin);
-  SineWave_adjustFreq(hsin, &htim6);
+//  SineWave_generate(hsin);
+//  SineWave_adjustFreq(hsin, &htim6);
 //
-  HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 0);
-  HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, &lookup[0], 256, DAC_ALIGN_12B_R);
-//
-  HAL_TIM_Base_Start_IT(&htim6);
+//  HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 0);
+//  HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, &lookup[0], 256, DAC_ALIGN_12B_R);
+////
+//  HAL_TIM_Base_Start_IT(&htim6);
 
-//  uint8_t tmp=0;
-//
-//  HAL_I2C_Mem_Write(&hi2c1, 0x94, 0x04, 1, 0xF0, 1, 10);
-//  HAL_I2C_Mem_Read(&hi2c1, 0x94, 0x04, 1, &tmp, 1, 10);
+
+  status = VL53L1X_init(Dev);
+  VL53L1X_startContinuous(Dev, 50);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  VL53L1X_read(Dev, &data, &results);
+//	  SineWave_generate(hsin, &data);
+//	  SineWave_adjustFreq(hsin, &htim6);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -237,7 +246,7 @@ static void MX_DAC1_Init(void)
   /**DAC channel OUT1 config 
   */
   sConfig.DAC_SampleAndHold = DAC_SAMPLEANDHOLD_DISABLE;
-  sConfig.DAC_Trigger = DAC_TRIGGER_NONE;
+  sConfig.DAC_Trigger = DAC_TRIGGER_T6_TRGO;
   sConfig.DAC_OutputBuffer = DAC_OUTPUTBUFFER_ENABLE;
   sConfig.DAC_ConnectOnChipPeripheral = DAC_CHIPCONNECT_ENABLE;
   sConfig.DAC_UserTrimming = DAC_TRIMMING_FACTORY;
@@ -267,7 +276,7 @@ static void MX_I2C1_Init(void)
 
   /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = 0x10909CEC;
+  hi2c1.Init.Timing = 0x00702991;
   hi2c1.Init.OwnAddress1 = 0;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;

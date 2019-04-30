@@ -46,12 +46,13 @@ uint16_t lookup[LOOKUP_SIZE]={0};
 void SineWave_init(SineWaveHandler hsin)
 {
 	hsin->amp = 1.0;
-	hsin->freq = 10000;
+	hsin->freq = 1000;
 }
 
-void SineWave_generate(SineWaveHandler hsin)
+void SineWave_generate(SineWaveHandler hsin, RangingData *data)
 {
 //	memcpy(hsin->data, lookup, LOOKUP_SIZE);
+	hsin->amp = 1.0*data->range_mm/1360;
 
 	float32_t step = 2*PI/LOOKUP_SIZE;
 	float32_t pos = 0;

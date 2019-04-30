@@ -14,6 +14,7 @@
 #include "stm32l4xx.h"
 #include <stdint.h>
 #include "arm_math.h"
+#include "VL53L1X.h"
 #include "main.h"
 
 #define LOOKUP_SIZE 256
@@ -35,7 +36,7 @@ typedef SineWave *SineWaveHandler;
 //SineWaveHandler hsin = &sin;
 
 void SineWave_init(SineWaveHandler hsin);
-void SineWave_generate(SineWaveHandler hsin);
+void SineWave_generate(SineWaveHandler hsin, RangingData *data);
 void SineWave_adjustFreq(SineWaveHandler hsin,  TIM_HandleTypeDef *htim);
 
 
