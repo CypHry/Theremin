@@ -22,5 +22,8 @@ thereminStatus thereminInit(VL53L1X_DEV Dev1, VL53L1X_DEV Dev2)
 	if(VL53L1X_Init(Dev2) == VL53L1X_Error)
 		return thereminError;
 
+	 VL53L1X_startContinuous(Dev1, 50);
+	 VL53L1X_startContinuous(Dev2, 50);
+
 	return thereminOK;
 }
