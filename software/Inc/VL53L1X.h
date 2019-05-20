@@ -13,6 +13,7 @@
 #include <stdbool.h>
 
 #define VL53L1X_ADDRESS_DEFAULT		(0x29<<1)
+#define VL53L1X_2ND_ADDRESS			54
 #define	VL53L1X_TIMING_GUARD		4528
 #define VL53L1X_TARGET_RATE			0x0A00
 #define BASE_TIMEOUT 10

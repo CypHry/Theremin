@@ -118,7 +118,7 @@ VL53L1X_Status VL53L1X_init(VL53L1X_DEV Dev)
 void VL53L1X_setAddress(VL53L1X_DEV Dev, uint8_t new_addr)
 {
 	VL53L1X_writeReg(Dev, VL53L1_I2C_SLAVE__DEVICE_ADDRESS, new_addr & 0x7F);
-	Dev->I2cDevAddr = new_addr;
+	Dev->I2cDevAddr = new_addr<<1;
 }
 
 VL53L1X_Status VL53L1X_setDistanceMode(VL53L1X_DEV Dev, DistanceMode mode)
