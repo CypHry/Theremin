@@ -9,7 +9,8 @@
 #define THEREMIN_H_
 
 #include "VL53L1X.h"
-#include "gen_sinwave.h"
+#include "gen_sinewave.h"
+
 
 typedef enum {
 	thereminOK		= 0,

@@ -45,16 +45,37 @@
 /* USER CODE BEGIN Includes */
 #include "gen_sinewave.h"
 #include "VL53L1X.h"
+#include "theremin.h"
+#include "CS43L22.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+//void HAL_SAI_TxCpltCallback(SAI_HandleTypeDef *hsai)
+//{
+//  /* NOTE : This function Should not be modified, when the callback is needed,
+//            the HAL_SAI_TxCpltCallback could be implemented in the user file
+//   */
+//  UpdatePointer = LOOKUP_SIZE/2;
+//}
 
+/**
+  * @brief Tx Transfer Half completed callbacks
+  * @param  hsai : pointer to a SAI_HandleTypeDef structure that contains
+  *                the configuration information for SAI module.
+  * @retval None
+  */
+//void HAL_SAI_TxHalfCpltCallback(SAI_HandleTypeDef *hsai)
+//{
+//  /* NOTE : This function Should not be modified, when the callback is needed,
+//            the HAL_SAI_TxHalfCpltCallback could be implenetd in the user file
+//   */
+//  UpdatePointer = 0;
+//}
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -67,6 +88,9 @@ DAC_HandleTypeDef hdac1;
 DMA_HandleTypeDef hdma_dac_ch1;
 
 I2C_HandleTypeDef hi2c1;
+
+SAI_HandleTypeDef hsai_BlockA1;
+DMA_HandleTypeDef hdma_sai1_a;
 
 TIM_HandleTypeDef htim6;
 
@@ -81,6 +105,9 @@ SineWaveHandler hsin = &sinwave;
 VL53L1X_Dev_t vl53l1x;
 VL53L1X_DEV Dev = &vl53l1x;
 
+CS43L22_Dev_t cs43l22;
+CS43L22_DEV AudioDev = &cs43l22;
+
 uint16_t sampleShow = 0;
 
 
@@ -94,6 +121,7 @@ static void MX_I2C1_Init(void);
 static void MX_DAC1_Init(void);
 static void MX_TIM6_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_SAI1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -113,6 +141,8 @@ int main(void)
 	RangingData data = {0};
 	ResultBuffer results = {0};
 	VL53L1X_Status status = VL53L1X_ERROR;
+	HAL_StatusTypeDef status_ = HAL_ERROR;
+
 
   /* USER CODE END 1 */
 
@@ -139,30 +169,62 @@ int main(void)
   MX_DAC1_Init();
   MX_TIM6_Init();
   MX_USART2_UART_Init();
+  MX_SAI1_Init();
   /* USER CODE BEGIN 2 */
   //SineWave_init(hsin);
   uint16_t range;
 //  SineWave_generate(hsin);
 //  SineWave_adjustFreq(hsin, &htim6);
 //
-  HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 0);
-  HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, &lookup[0], 256, DAC_ALIGN_12B_R);
-//
+  AudioDev->I2cHandle=&hi2c1;
+  AudioDev->deviceAddr=AUDIO_I2C_ADDRESS;
+  uint8_t id=0;
+  HAL_GPIO_WritePin(AUDIO_RST_GPIO_Port, AUDIO_RST_Pin, GPIO_PIN_SET);
+  HAL_Delay(100);
+  HAL_GPIO_WritePin(AUDIO_RST_GPIO_Port, AUDIO_RST_Pin, GPIO_PIN_RESET);
+  HAL_Delay(30);
+  HAL_GPIO_WritePin(AUDIO_RST_GPIO_Port, AUDIO_RST_Pin, GPIO_PIN_SET);
+  HAL_Delay(100);
+  status_ = HAL_I2C_IsDeviceReady(AudioDev->I2cHandle, AUDIO_I2C_ADDRESS,10, 10);
+  HAL_I2C_Mem_Read(AudioDev->I2cHandle, AUDIO_I2C_ADDRESS, CS43L22_CHIPID_ADDR, 1, &id, 1, 10);
+  CS43L22_Init(AudioDev);
+
+ //
   HAL_TIM_Base_Start_IT(&htim6);
 
   Dev->I2cHandle=&hi2c1;
 
   status = VL53L1X_init(Dev);
   VL53L1X_startContinuous(Dev, 50);
+
+  SineWave_generate(hsin, &data);
+  CS43L22_Play(AudioDev);
+
+  HAL_SAI_Transmit_DMA(&hsai_BlockA1, lookup, LOOKUP_SIZE);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  range = VL53L1X_read(Dev, &data, &results);
-	  SineWave_generate(hsin, &data);
-	  SineWave_adjustFreq(hsin, &htim6);
+	  /* Wait a callback event */
+//	     while(UpdatePointer==-1);
+//
+//	     int position = UpdatePointer;
+//	     UpdatePointer = -1;
+//
+//	     /* Upate the first or the second part of the buffer */
+//	     for(int i = 0; i < LOOKUP_SIZE/2; i++)
+//	     {
+//	       lookup[i+position] = *(uint16_t *)(lookup + PlaybackPosition);
+//	       PlaybackPosition+=2;
+//	     }
+//
+//	     /* check the end of the file */
+//	     if((PlaybackPosition+LOOKUP_SIZE/2) > LOOKUP_SIZE)
+//	     {
+//	       PlaybackPosition = PLAY_HEADER;
+//	     }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -208,9 +270,11 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_I2C1;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_SAI1
+                              |RCC_PERIPHCLK_I2C1;
   PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
   PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
+  PeriphClkInit.Sai1ClockSelection = RCC_SAI1CLKSOURCE_PLL;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
@@ -311,6 +375,55 @@ static void MX_I2C1_Init(void)
 }
 
 /**
+  * @brief SAI1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SAI1_Init(void)
+{
+
+  /* USER CODE BEGIN SAI1_Init 0 */
+
+  /* USER CODE END SAI1_Init 0 */
+
+  /* USER CODE BEGIN SAI1_Init 1 */
+
+  /* USER CODE END SAI1_Init 1 */
+  hsai_BlockA1.Instance = SAI1_Block_A;
+  hsai_BlockA1.Init.Protocol = SAI_FREE_PROTOCOL;
+  hsai_BlockA1.Init.AudioMode = SAI_MODEMASTER_TX;
+  hsai_BlockA1.Init.DataSize = SAI_DATASIZE_16;
+  hsai_BlockA1.Init.FirstBit = SAI_FIRSTBIT_MSB;
+  hsai_BlockA1.Init.ClockStrobing = SAI_CLOCKSTROBING_FALLINGEDGE;
+  hsai_BlockA1.Init.Synchro = SAI_ASYNCHRONOUS;
+  hsai_BlockA1.Init.OutputDrive = SAI_OUTPUTDRIVE_ENABLE;
+  hsai_BlockA1.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
+  hsai_BlockA1.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_EMPTY;
+  hsai_BlockA1.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_48K;
+  hsai_BlockA1.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
+  hsai_BlockA1.Init.MonoStereoMode = SAI_MONOMODE;
+  hsai_BlockA1.Init.CompandingMode = SAI_NOCOMPANDING;
+  hsai_BlockA1.Init.TriState = SAI_OUTPUT_NOTRELEASED;
+  hsai_BlockA1.FrameInit.FrameLength = 32;
+  hsai_BlockA1.FrameInit.ActiveFrameLength = 16;
+  hsai_BlockA1.FrameInit.FSDefinition = SAI_FS_STARTFRAME;
+  hsai_BlockA1.FrameInit.FSPolarity = SAI_FS_ACTIVE_LOW;
+  hsai_BlockA1.FrameInit.FSOffset = SAI_FS_FIRSTBIT;
+  hsai_BlockA1.SlotInit.FirstBitOffset = 0;
+  hsai_BlockA1.SlotInit.SlotSize = SAI_SLOTSIZE_DATASIZE;
+  hsai_BlockA1.SlotInit.SlotNumber = 2;
+  hsai_BlockA1.SlotInit.SlotActive = 0x00000003;
+  if (HAL_SAI_Init(&hsai_BlockA1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SAI1_Init 2 */
+
+  /* USER CODE END SAI1_Init 2 */
+
+}
+
+/**
   * @brief TIM6 Initialization Function
   * @param None
   * @retval None
@@ -390,6 +503,7 @@ static void MX_DMA_Init(void)
 {
   /* DMA controller clock enable */
   __HAL_RCC_DMA1_CLK_ENABLE();
+  __HAL_RCC_DMA2_CLK_ENABLE();
 
   /* DMA interrupt init */
   /* DMA1_Channel3_IRQn interrupt configuration */
@@ -401,6 +515,9 @@ static void MX_DMA_Init(void)
   /* DMA1_Channel7_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel7_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel7_IRQn);
+  /* DMA2_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Channel1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Channel1_IRQn);
 
 }
 
@@ -414,21 +531,31 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD_Green_GPIO_Port, LD_Green_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, AUDIO_RST_Pin|LD_Green_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : LD_Green_Pin */
-  GPIO_InitStruct.Pin = LD_Green_Pin;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(XSHUT_GPIO_Port, XSHUT_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : AUDIO_RST_Pin LD_Green_Pin */
+  GPIO_InitStruct.Pin = AUDIO_RST_Pin|LD_Green_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LD_Green_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : XSHUT_Pin */
+  GPIO_InitStruct.Pin = XSHUT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(XSHUT_GPIO_Port, &GPIO_InitStruct);
 
 }
 

@@ -1,17 +1,13 @@
-/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file           : main.h
-  * @brief          : Header for main.c file.
-  *                   This file contains the common defines of the application.
+  * @file    audio.h
+  * @author  MCD Application Team
+  * @brief   This header file contains the common defines and functions prototypes
+  *          for the Audio driver.  
   ******************************************************************************
-  ** This notice applies to any and all portions of this file
-  * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether 
-  * inserted by the user or by software development tools
-  * are owned by their respective copyright owners.
+  * @attention
   *
-  * COPYRIGHT(c) 2019 STMicroelectronics
+  * <h2><center>&copy; COPYRIGHT(c) 2017 STMicroelectronics</center></h2>
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -37,63 +33,88 @@
   *
   ******************************************************************************
   */
-/* USER CODE END Header */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __MAIN_H
-#define __MAIN_H
+#ifndef __AUDIO_H
+#define __AUDIO_H
 
 #ifdef __cplusplus
-extern "C" {
+ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32l4xx_hal.h"
+#include <stdint.h>
 
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
+/** @addtogroup BSP
+  * @{
+  */
 
-/* USER CODE END Includes */
+/** @addtogroup Components
+  * @{
+  */
+    
+/** @addtogroup AUDIO
+  * @{
+  */
 
-/* Exported types ------------------------------------------------------------*/
-/* USER CODE BEGIN ET */
+/** @defgroup AUDIO_Exported_Constants
+  * @{
+  */
 
-/* USER CODE END ET */
+/* Codec audio Standards */
+#define CODEC_STANDARD                0x04
+#define I2S_STANDARD                  I2S_STANDARD_PHILIPS
 
-/* Exported constants --------------------------------------------------------*/
-/* USER CODE BEGIN EC */
+/**
+  * @}
+  */
 
-/* USER CODE END EC */
+/** @defgroup AUDIO_Exported_Types
+  * @{
+  */
 
-/* Exported macro ------------------------------------------------------------*/
-/* USER CODE BEGIN EM */
+/** @defgroup AUDIO_Driver_structure  Audio Driver structure
+  * @{
+  */
+typedef struct
+{
+  uint32_t  (*Init)(uint16_t, uint16_t, uint8_t, uint32_t);
+  void      (*DeInit)(void);
+  uint32_t  (*ReadID)(uint16_t);
+  uint32_t  (*Play)(uint16_t, uint16_t*, uint16_t);
+  uint32_t  (*Pause)(uint16_t);
+  uint32_t  (*Resume)(uint16_t);
+  uint32_t  (*Stop)(uint16_t, uint32_t);
+  uint32_t  (*SetFrequency)(uint16_t, uint32_t);
+  uint32_t  (*SetVolume)(uint16_t, uint8_t);
+  uint32_t  (*SetMute)(uint16_t, uint32_t);
+  uint32_t  (*SetOutputMode)(uint16_t, uint8_t);
+  uint32_t  (*Reset)(uint16_t);
+}AUDIO_DrvTypeDef;
+/**
+  * @}
+  */
 
-/* USER CODE END EM */
+/**
+  * @}
+  */
 
-/* Exported functions prototypes ---------------------------------------------*/
-void Error_Handler(void);
+/**
+  * @}
+  */
 
-/* USER CODE BEGIN EFP */
+/**
+  * @}
+  */
 
-/* USER CODE END EFP */
-
-/* Private defines -----------------------------------------------------------*/
-#define TIM_PERIOD 500
-#define TIM_PRESCALER 0
-#define AUDIO_RST_Pin GPIO_PIN_3
-#define AUDIO_RST_GPIO_Port GPIOE
-#define XSHUT_Pin GPIO_PIN_0
-#define XSHUT_GPIO_Port GPIOA
-#define LD_Green_Pin GPIO_PIN_8
-#define LD_Green_GPIO_Port GPIOE
-/* USER CODE BEGIN Private defines */
-#define TIM_CLOCK 80000000
-/* USER CODE END Private defines */
+/**
+  * @}
+  */
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __MAIN_H */
+#endif /* __AUDIO_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

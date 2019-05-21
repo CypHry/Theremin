@@ -17,9 +17,16 @@
 #include "VL53L1X.h"
 #include "main.h"
 
+
+#define AUDIO_FREQ 44642
 #define LOOKUP_SIZE 256
 #define MAX12BIT 4095
 #define MAX12BIT_2 (MAX12BIT>>1)
+#define MAX8BIT 255
+#define MAX8BIT_2 (MAX8BIT>>1)
+#define MAX16BIT  65535
+#define MAX16BIT_2 (MAX16BIT>>1)
+
 
 extern uint16_t lookup[LOOKUP_SIZE];
 extern uint16_t sampleShow;
