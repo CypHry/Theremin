@@ -1,9 +1,8 @@
 /**
   ******************************************************************************
-  * @file    audio.h
+  * @file    stm32l4xx_hal_dfsdm_ex.h
   * @author  MCD Application Team
-  * @brief   This header file contains the common defines and functions prototypes
-  *          for the Audio driver.  
+  * @brief   Header file of DFSDM HAL extended module.
   ******************************************************************************
   * @attention
   *
@@ -35,62 +34,58 @@
   */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __AUDIO_H
-#define __AUDIO_H
+#ifndef STM32L4xx_HAL_DFSDM_EX_H
+#define STM32L4xx_HAL_DFSDM_EX_H
 
 #ifdef __cplusplus
- extern "C" {
+extern "C" {
 #endif
 
+#if defined(STM32L4R5xx) || defined(STM32L4R7xx) || defined(STM32L4R9xx) || defined(STM32L4S5xx) || defined(STM32L4S7xx) || defined(STM32L4S9xx)
+
 /* Includes ------------------------------------------------------------------*/
-#include <stdint.h>
+#include "stm32l4xx_hal_def.h"
 
-/** @addtogroup BSP
+/** @addtogroup STM32L4xx_HAL_Driver
   * @{
   */
 
-/** @addtogroup Components
-  * @{
-  */
-    
-/** @addtogroup AUDIO
+/** @addtogroup DFSDMEx
   * @{
   */
 
-/** @defgroup AUDIO_Exported_Constants
+/* Exported types ------------------------------------------------------------*/
+/* Exported constants --------------------------------------------------------*/
+/* Exported macros -----------------------------------------------------------*/
+/* Exported functions --------------------------------------------------------*/
+
+/** @addtogroup DFSDMEx_Exported_Functions DFSDM Extended Exported Functions
   * @{
   */
 
-/* Codec audio Standards */
-#define CODEC_STANDARD                0x04
-#define I2S_STANDARD                  I2S_STANDARD_PHILIPS
+/** @addtogroup DFSDMEx_Exported_Functions_Group1_Channel Extended channel operation functions
+  * @{
+  */
+
+HAL_StatusTypeDef HAL_DFDSMEx_ChannelSetPulsesSkipping(DFSDM_Channel_HandleTypeDef *hdfsdm_channel, uint32_t PulsesValue);
+HAL_StatusTypeDef HAL_DFDSMEx_ChannelGetPulsesSkipping(DFSDM_Channel_HandleTypeDef *hdfsdm_channel, uint32_t *PulsesValue);
 
 /**
   * @}
   */
 
-/** @defgroup AUDIO_Exported_Types
+/**
+  * @}
+  */
+
+/* Private macros ------------------------------------------------------------*/
+
+/** @addtogroup DFSDMEx_Private_Macros DFSDM Extended Private Macros
   * @{
   */
 
-/** @defgroup AUDIO_Driver_structure  Audio Driver structure
-  * @{
-  */
-typedef struct
-{
-  uint32_t  (*Init)(uint16_t, uint16_t, uint8_t, uint32_t);
-  void      (*DeInit)(void);
-  uint32_t  (*ReadID)(uint16_t);
-  uint32_t  (*Play)(uint16_t, uint16_t*, uint16_t);
-  uint32_t  (*Pause)(uint16_t);
-  uint32_t  (*Resume)(uint16_t);
-  uint32_t  (*Stop)(uint16_t, uint32_t);
-  uint32_t  (*SetFrequency)(uint16_t, uint32_t);
-  uint32_t  (*SetVolume)(uint16_t, uint8_t);
-  uint32_t  (*SetMute)(uint16_t, uint32_t);
-  uint32_t  (*SetOutputMode)(uint16_t, uint8_t);
-  uint32_t  (*Reset)(uint16_t);
-}AUDIO_DrvTypeDef;
+#define IS_DFSDM_CHANNEL_SKIPPING_VALUE(VALUE)   ((VALUE) < 64U)
+
 /**
   * @}
   */
@@ -103,18 +98,12 @@ typedef struct
   * @}
   */
 
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
+#endif /* STM32L4R5xx || STM32L4R7xx || STM32L4R9xx || STM32L4S5xx || STM32L4S7xx || STM32L4S9xx */
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __AUDIO_H */
+#endif /* STM32L4xx_HAL_DFSDM_EX_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
