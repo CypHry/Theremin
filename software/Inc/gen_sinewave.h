@@ -19,7 +19,7 @@
 
 
 #define AUDIO_FREQ 44642
-#define LOOKUP_SIZE 256
+#define LOOKUP_MAXSIZE 300
 #define MAX12BIT 4095
 #define MAX12BIT_2 (MAX12BIT>>1)
 #define MAX8BIT 255
@@ -28,7 +28,7 @@
 #define MAX16BIT_2 (MAX16BIT>>1)
 
 
-extern uint16_t lookup[LOOKUP_SIZE];
+extern uint16_t lookup[LOOKUP_MAXSIZE];
 extern uint16_t sampleShow;
 
 typedef struct
@@ -36,6 +36,7 @@ typedef struct
 	float32_t amp;
 	uint16_t freq;
 	uint16_t* data;
+	uint8_t sampleNum;
 }SineWave;
 
 typedef SineWave *SineWaveHandler;

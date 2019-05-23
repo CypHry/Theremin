@@ -47,6 +47,9 @@
 #include "VL53L1X.h"
 #include "theremin.h"
 #include "CS43L22.h"
+#include "audio.h"
+#include "cs43l22.h"
+//#include "stm32l476g_discovery_audio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -105,6 +108,8 @@ SineWaveHandler hsin = &sinwave;
 VL53L1X_Dev_t vl53l1x;
 VL53L1X_DEV Dev = &vl53l1x;
 
+AUDIO_DrvTypeDef *audio_drv;
+
 CS43L22_Dev_t cs43l22;
 CS43L22_DEV AudioDev = &cs43l22;
 
@@ -123,7 +128,8 @@ static void MX_TIM6_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_SAI1_Init(void);
 /* USER CODE BEGIN PFP */
-
+static void Playback_Init(void);
+void HAL_SAI_MspInit(SAI_HandleTypeDef *hsai);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -171,6 +177,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_SAI1_Init();
   /* USER CODE BEGIN 2 */
+  HAL_SAI_MspInit(&hsai_BlockA1);
   //SineWave_init(hsin);
   uint16_t range;
 //  SineWave_generate(hsin);
@@ -178,18 +185,18 @@ int main(void)
 //
   AudioDev->I2cHandle=&hi2c1;
   AudioDev->deviceAddr=AUDIO_I2C_ADDRESS;
-  uint8_t id=0;
-  HAL_GPIO_WritePin(AUDIO_RST_GPIO_Port, AUDIO_RST_Pin, GPIO_PIN_SET);
-  HAL_Delay(100);
-  HAL_GPIO_WritePin(AUDIO_RST_GPIO_Port, AUDIO_RST_Pin, GPIO_PIN_RESET);
-  HAL_Delay(30);
-  HAL_GPIO_WritePin(AUDIO_RST_GPIO_Port, AUDIO_RST_Pin, GPIO_PIN_SET);
-  HAL_Delay(100);
-  status_ = HAL_I2C_IsDeviceReady(AudioDev->I2cHandle, AUDIO_I2C_ADDRESS,10, 10);
-  HAL_I2C_Mem_Read(AudioDev->I2cHandle, AUDIO_I2C_ADDRESS, CS43L22_CHIPID_ADDR, 1, &id, 1, 10);
-  CS43L22_Init(AudioDev);
+//  uint8_t id=0;
+//  HAL_GPIO_WritePin(AUDIO_RST_GPIO_Port, AUDIO_RST_Pin, GPIO_PIN_SET);
+//  HAL_Delay(100);
+//  HAL_GPIO_WritePin(AUDIO_RST_GPIO_Port, AUDIO_RST_Pin, GPIO_PIN_RESET);
+//  HAL_Delay(30);
+//  HAL_GPIO_WritePin(AUDIO_RST_GPIO_Port, AUDIO_RST_Pin, GPIO_PIN_SET);
+//  HAL_Delay(100);
 
- //
+
+  //CS43L22_Init(AudioDev);
+  //BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_HEADPHONE, 80, BSP_AUDIO_FREQUENCY_48K);
+
   HAL_TIM_Base_Start_IT(&htim6);
 
   Dev->I2cHandle=&hi2c1;
@@ -198,15 +205,23 @@ int main(void)
   VL53L1X_startContinuous(Dev, 50);
 
   SineWave_generate(hsin, &data);
-  CS43L22_Play(AudioDev);
 
-  HAL_SAI_Transmit_DMA(&hsai_BlockA1, lookup, LOOKUP_SIZE);
+  Playback_Init();
+
+
+  //BSP_AUDIO_OUT_Play(&lookup[0], LOOKUP_SIZE);
+
+  //CS43L22_Play(AudioDev);
+  audio_drv->Play(AUDIO_I2C_ADDRESS, (uint16_t *) &lookup[0], hsin->sampleNum);
+
+  HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *) &lookup[0], hsin->sampleNum);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
 	  /* Wait a callback event */
 //	     while(UpdatePointer==-1);
 //
@@ -230,6 +245,103 @@ int main(void)
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
+}
+
+static void Playback_Init(void)
+{
+  /* Initialize SAI */
+  __HAL_SAI_RESET_HANDLE_STATE(&hsai_BlockA1);
+
+  hsai_BlockA1.Instance = SAI1_Block_A;
+
+  hsai_BlockA1.Init.AudioMode      = SAI_MODEMASTER_TX;
+  hsai_BlockA1.Init.Synchro        = SAI_ASYNCHRONOUS;
+  hsai_BlockA1.Init.SynchroExt     = SAI_SYNCEXT_DISABLE;
+  hsai_BlockA1.Init.OutputDrive    = SAI_OUTPUTDRIVE_ENABLE;
+  hsai_BlockA1.Init.NoDivider      = SAI_MASTERDIVIDER_ENABLE;
+  hsai_BlockA1.Init.FIFOThreshold  = SAI_FIFOTHRESHOLD_1QF;
+  hsai_BlockA1.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_48K;
+  hsai_BlockA1.Init.Mckdiv         = 0; /* N.U */
+  hsai_BlockA1.Init.MonoStereoMode = SAI_STEREOMODE;
+  hsai_BlockA1.Init.CompandingMode = SAI_NOCOMPANDING;
+  hsai_BlockA1.Init.TriState       = SAI_OUTPUT_NOTRELEASED;
+  hsai_BlockA1.Init.Protocol       = SAI_FREE_PROTOCOL;
+  hsai_BlockA1.Init.DataSize       = SAI_DATASIZE_16;
+  hsai_BlockA1.Init.FirstBit       = SAI_FIRSTBIT_MSB;
+  hsai_BlockA1.Init.ClockStrobing  = SAI_CLOCKSTROBING_FALLINGEDGE;
+
+  hsai_BlockA1.FrameInit.FrameLength       = 32;
+  hsai_BlockA1.FrameInit.ActiveFrameLength = 16;
+  hsai_BlockA1.FrameInit.FSDefinition      = SAI_FS_CHANNEL_IDENTIFICATION;
+  hsai_BlockA1.FrameInit.FSPolarity        = SAI_FS_ACTIVE_LOW;
+  hsai_BlockA1.FrameInit.FSOffset          = SAI_FS_BEFOREFIRSTBIT;
+
+  hsai_BlockA1.SlotInit.FirstBitOffset = 0;
+  hsai_BlockA1.SlotInit.SlotSize       = SAI_SLOTSIZE_DATASIZE;
+  hsai_BlockA1.SlotInit.SlotNumber     = 2;
+  hsai_BlockA1.SlotInit.SlotActive     = (SAI_SLOTACTIVE_0 | SAI_SLOTACTIVE_1);
+
+  if(HAL_OK != HAL_SAI_Init(&hsai_BlockA1))
+  {
+    Error_Handler();
+  }
+
+  /* Enable SAI to generate clock used by audio driver */
+  __HAL_SAI_ENABLE(&hsai_BlockA1);
+
+  /* Initialize audio driver */
+  if(CS43L22_ID != cs43l22_drv.ReadID(AUDIO_I2C_ADDRESS))
+  {
+    Error_Handler();
+  }
+  audio_drv = &cs43l22_drv;
+  audio_drv->Reset(AUDIO_I2C_ADDRESS);
+  if(0 != audio_drv->Init(AUDIO_I2C_ADDRESS, OUTPUT_DEVICE_HEADPHONE, 90, AUDIO_FREQUENCY_44K))
+  {
+    Error_Handler();
+  }
+}
+
+/**
+  * @brief  SAI MSP Init.
+  * @param  hsai : pointer to a SAI_HandleTypeDef structure that contains
+  *                the configuration information for SAI module.
+  * @retval None
+  */
+void HAL_SAI_MspInit(SAI_HandleTypeDef *hsai)
+{
+  GPIO_InitTypeDef  GPIO_Init;
+
+  /* Enable SAI1 clock */
+  __HAL_RCC_SAI1_CLK_ENABLE();
+
+  /* Configure GPIOs used for SAI1 */
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+  GPIO_Init.Mode      = GPIO_MODE_AF_PP;
+  GPIO_Init.Pull      = GPIO_NOPULL;
+  GPIO_Init.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_Init.Alternate = GPIO_AF13_SAI1;
+  GPIO_Init.Pin       = (GPIO_PIN_2 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6);
+  HAL_GPIO_Init(GPIOE, &GPIO_Init);
+
+  /* Configure DMA used for SAI1 */
+  __HAL_RCC_DMA2_CLK_ENABLE();
+  hdma_sai1_a.Init.Request             = DMA_REQUEST_1;
+  hdma_sai1_a.Init.Direction           = DMA_MEMORY_TO_PERIPH;
+  hdma_sai1_a.Init.PeriphInc           = DMA_PINC_DISABLE;
+  hdma_sai1_a.Init.MemInc              = DMA_MINC_ENABLE;
+  hdma_sai1_a.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
+  hdma_sai1_a.Init.MemDataAlignment    = DMA_MDATAALIGN_HALFWORD;
+  hdma_sai1_a.Init.Mode                = DMA_CIRCULAR;
+  hdma_sai1_a.Init.Priority            = DMA_PRIORITY_HIGH;
+  hdma_sai1_a.Instance                 = DMA2_Channel1;
+  __HAL_LINKDMA(hsai, hdmatx, hdma_sai1_a);
+  if (HAL_OK != HAL_DMA_Init(&hdma_sai1_a))
+  {
+    Error_Handler();
+  }
+  HAL_NVIC_SetPriority(DMA2_Channel1_IRQn, 0x01, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Channel1_IRQn);
 }
 
 /**
@@ -398,17 +510,17 @@ static void MX_SAI1_Init(void)
   hsai_BlockA1.Init.Synchro = SAI_ASYNCHRONOUS;
   hsai_BlockA1.Init.OutputDrive = SAI_OUTPUTDRIVE_ENABLE;
   hsai_BlockA1.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
-  hsai_BlockA1.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_EMPTY;
+  hsai_BlockA1.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_1QF;
   hsai_BlockA1.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_48K;
   hsai_BlockA1.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
-  hsai_BlockA1.Init.MonoStereoMode = SAI_MONOMODE;
+  hsai_BlockA1.Init.MonoStereoMode = SAI_STEREOMODE;
   hsai_BlockA1.Init.CompandingMode = SAI_NOCOMPANDING;
   hsai_BlockA1.Init.TriState = SAI_OUTPUT_NOTRELEASED;
   hsai_BlockA1.FrameInit.FrameLength = 32;
   hsai_BlockA1.FrameInit.ActiveFrameLength = 16;
-  hsai_BlockA1.FrameInit.FSDefinition = SAI_FS_STARTFRAME;
+  hsai_BlockA1.FrameInit.FSDefinition = SAI_FS_CHANNEL_IDENTIFICATION;
   hsai_BlockA1.FrameInit.FSPolarity = SAI_FS_ACTIVE_LOW;
-  hsai_BlockA1.FrameInit.FSOffset = SAI_FS_FIRSTBIT;
+  hsai_BlockA1.FrameInit.FSOffset = SAI_FS_BEFOREFIRSTBIT;
   hsai_BlockA1.SlotInit.FirstBitOffset = 0;
   hsai_BlockA1.SlotInit.SlotSize = SAI_SLOTSIZE_DATASIZE;
   hsai_BlockA1.SlotInit.SlotNumber = 2;
@@ -418,7 +530,7 @@ static void MX_SAI1_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN SAI1_Init 2 */
-
+  __HAL_SAI_ENABLE(&hsai_BlockA1);
   /* USER CODE END SAI1_Init 2 */
 
 }
@@ -512,7 +624,7 @@ static void MX_DMA_Init(void)
   /* DMA1_Channel6_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel6_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel6_IRQn);
-  /* DMA1_Channel7_IRQn interrupt configuration */ m
+  /* DMA1_Channel7_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel7_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel7_IRQn);
   /* DMA2_Channel1_IRQn interrupt configuration */
