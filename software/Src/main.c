@@ -6,7 +6,7 @@
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether 
+  * USER CODE END. Other portions of this file, whether
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
@@ -87,207 +87,257 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-DAC_HandleTypeDef hdac1;
-DMA_HandleTypeDef hdma_dac_ch1;
-
-I2C_HandleTypeDef hi2c1;
-
-SAI_HandleTypeDef hsai_BlockA1;
-DMA_HandleTypeDef hdma_sai1_a;
-
-TIM_HandleTypeDef htim6;
-
-UART_HandleTypeDef huart2;
-DMA_HandleTypeDef hdma_usart2_rx;
-DMA_HandleTypeDef hdma_usart2_tx;
-
-/* USER CODE BEGIN PV */
-SineWave sinwave;
-SineWaveHandler hsin = &sinwave;
-
-VL53L1X_Dev_t vl53l1x;
-VL53L1X_DEV Dev = &vl53l1x;
-
-AUDIO_DrvTypeDef *audio_drv;
-
-CS43L22_Dev_t cs43l22;
-CS43L22_DEV AudioDev = &cs43l22;
-
-uint16_t sampleShow = 0;
-
-
-/* USER CODE END PV */
-
+#define SaturaLH(N, L, H) (((N)<(L))?(L):(((N)>(H))?(H):(N)))
+/* Private variables ---------------------------------------------------------*/
+DFSDM_Channel_HandleTypeDef  DfsdmChannelHandle;
+DFSDM_Filter_HandleTypeDef   DfsdmFilterHandle;
+DMA_HandleTypeDef            hDfsdmDma;
+SAI_HandleTypeDef            SaiHandle;
+DMA_HandleTypeDef            hSaiDma;
+AUDIO_DrvTypeDef            *audio_drv;
+int32_t                      RecBuff[2048];
+int16_t                      PlayBuff[4096];
+uint32_t                     DmaRecHalfBuffCplt  = 0;
+uint32_t                     DmaRecBuffCplt      = 0;
+uint32_t                     PlaybackStarted         = 0;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-static void MX_GPIO_Init(void);
-static void MX_DMA_Init(void);
-static void MX_I2C1_Init(void);
-static void MX_DAC1_Init(void);
-static void MX_TIM6_Init(void);
-static void MX_USART2_UART_Init(void);
-static void MX_SAI1_Init(void);
-/* USER CODE BEGIN PFP */
+static void DFSDM_Init(void);
 static void Playback_Init(void);
-void HAL_SAI_MspInit(SAI_HandleTypeDef *hsai);
-/* USER CODE END PFP */
 
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
-
-/* USER CODE END 0 */
+/* Private functions ---------------------------------------------------------*/
 
 /**
-  * @brief  The application entry point.
-  * @retval int
+  * @brief  Main program
+  * @param  None
+  * @retval None
   */
 int main(void)
 {
-  /* USER CODE BEGIN 1 */
-	RangingData data = {0};
-	ResultBuffer results = {0};
-	VL53L1X_Status status = VL53L1X_ERROR;
-	HAL_StatusTypeDef status_ = HAL_ERROR;
-
-
-  /* USER CODE END 1 */
-
-  /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  uint32_t i;
+  /* STM32L4xx HAL library initialization:
+       - Configure the Flash prefetch
+       - Systick timer is configured by default as source of time base, but user
+         can eventually implement his proper time base source (a general purpose
+         timer for example or other time source), keeping in mind that Time base
+         duration should be kept 1ms since PPP_TIMEOUT_VALUEs are defined and
+         handled in milliseconds basis.
+       - Set NVIC Group Priority to 4
+       - Low Level Initialization
+     */
   HAL_Init();
 
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
+  /* Configure the system clock to have a frequency of 80 MHz */
   SystemClock_Config();
 
-  /* USER CODE BEGIN SysInit */
+  /* Configure LED4 */
+  //BSP_LED_Init(LED4);
 
-  /* USER CODE END SysInit */
+  /* Initialize DFSDM channels and filter for record */
+  DFSDM_Init();
 
-  /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_DMA_Init();
-  MX_I2C1_Init();
-  MX_DAC1_Init();
-  MX_TIM6_Init();
-  MX_USART2_UART_Init();
-  MX_SAI1_Init();
-  /* USER CODE BEGIN 2 */
-  HAL_SAI_MspInit(&hsai_BlockA1);
-  //SineWave_init(hsin);
-  uint16_t range;
-//  SineWave_generate(hsin);
-//  SineWave_adjustFreq(hsin, &htim6);
-//
-  AudioDev->I2cHandle=&hi2c1;
-  AudioDev->deviceAddr=AUDIO_I2C_ADDRESS;
-//  uint8_t id=0;
-//  HAL_GPIO_WritePin(AUDIO_RST_GPIO_Port, AUDIO_RST_Pin, GPIO_PIN_SET);
-//  HAL_Delay(100);
-//  HAL_GPIO_WritePin(AUDIO_RST_GPIO_Port, AUDIO_RST_Pin, GPIO_PIN_RESET);
-//  HAL_Delay(30);
-//  HAL_GPIO_WritePin(AUDIO_RST_GPIO_Port, AUDIO_RST_Pin, GPIO_PIN_SET);
-//  HAL_Delay(100);
-
-
-  //CS43L22_Init(AudioDev);
-  //BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_HEADPHONE, 80, BSP_AUDIO_FREQUENCY_48K);
-
-  HAL_TIM_Base_Start_IT(&htim6);
-
-  Dev->I2cHandle=&hi2c1;
-
-  status = VL53L1X_init(Dev);
-  VL53L1X_startContinuous(Dev, 50);
-
-  SineWave_generate(hsin, &data);
-
+  /* Initialize playback */
   Playback_Init();
 
-
-  //BSP_AUDIO_OUT_Play(&lookup[0], LOOKUP_SIZE);
-
-  //CS43L22_Play(AudioDev);
-  audio_drv->Play(AUDIO_I2C_ADDRESS, (uint16_t *) &lookup[0], hsin->sampleNum);
-
-  HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *) &lookup[0], hsin->sampleNum);
-  /* USER CODE END 2 */
-
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  while (1)
+  /* Start DFSDM conversions */
+  if(HAL_OK != HAL_DFSDM_FilterRegularStart_DMA(&DfsdmFilterHandle, RecBuff, 2048))
   {
-
-	  /* Wait a callback event */
-//	     while(UpdatePointer==-1);
-//
-//	     int position = UpdatePointer;
-//	     UpdatePointer = -1;
-//
-//	     /* Upate the first or the second part of the buffer */
-//	     for(int i = 0; i < LOOKUP_SIZE/2; i++)
-//	     {
-//	       lookup[i+position] = *(uint16_t *)(lookup + PlaybackPosition);
-//	       PlaybackPosition+=2;
-//	     }
-//
-//	     /* check the end of the file */
-//	     if((PlaybackPosition+LOOKUP_SIZE/2) > LOOKUP_SIZE)
-//	     {
-//	       PlaybackPosition = PLAY_HEADER;
-//	     }
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
+    Error_Handler();
   }
-  /* USER CODE END 3 */
+
+  /* Start loopback */
+  while(1)
+  {
+    if(DmaRecHalfBuffCplt == 1)
+    {
+      /* Store values on Play buff */
+      for(i = 0; i < 1024; i++)
+      {
+        PlayBuff[2*i]     = SaturaLH((RecBuff[i] >> 8), -32768, 32767);
+        PlayBuff[(2*i)+1] = PlayBuff[2*i];
+      }
+      if(PlaybackStarted == 0)
+      {
+        if(0 != audio_drv->Play(AUDIO_I2C_ADDRESS, (uint16_t *) &PlayBuff[0], 4096))
+        {
+          Error_Handler();
+        }
+        if(HAL_OK != HAL_SAI_Transmit_DMA(&SaiHandle, (uint8_t *) &PlayBuff[0], 4096))
+        {
+          Error_Handler();
+        }
+        PlaybackStarted = 1;
+      }
+      DmaRecHalfBuffCplt  = 0;
+    }
+    if(DmaRecBuffCplt == 1)
+    {
+      /* Store values on Play buff */
+      for(i = 1024; i < 2048; i++)
+      {
+        PlayBuff[2*i]     = SaturaLH((RecBuff[i] >> 8), -32768, 32767);
+        PlayBuff[(2*i)+1] = PlayBuff[2*i];
+      }
+      DmaRecBuffCplt  = 0;
+    }
+  }
 }
 
+/**
+  * @brief  System Clock Configuration
+  *         The system Clock is configured as follows :
+  *            System Clock source            = PLL (MSI)
+  *            SYSCLK(Hz)                     = 80000000
+  *            HCLK(Hz)                       = 80000000
+  *            AHB Prescaler                  = 1
+  *            APB1 Prescaler                 = 1
+  *            APB2 Prescaler                 = 1
+  *            MSI Frequency(Hz)              = 4000000
+  *            PLL_M                          = 1
+  *            PLL_N                          = 40
+  *            PLL_R                          = 2
+  *            PLL_P                          = 7
+  *            PLL_Q                          = 4
+  *            Flash Latency(WS)              = 4
+  * @param  None
+  * @retval None
+  */
+void SystemClock_Config(void)
+{
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+
+  /* MSI is enabled after System reset, activate PLL with MSI as source */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
+  RCC_OscInitStruct.MSIState = RCC_MSI_ON;
+  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_6;
+  RCC_OscInitStruct.MSICalibrationValue = RCC_MSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_MSI;
+  RCC_OscInitStruct.PLL.PLLM = 1;
+  RCC_OscInitStruct.PLL.PLLN = 40;
+  RCC_OscInitStruct.PLL.PLLR = 2;
+  RCC_OscInitStruct.PLL.PLLP = 7;
+  RCC_OscInitStruct.PLL.PLLQ = 4;
+  if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    /* Initialization Error */
+    while(1);
+  }
+
+  /* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
+     clocks dividers */
+  RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+  if(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
+  {
+    /* Initialization Error */
+    while(1);
+  }
+}
+
+/**
+  * @brief  DFSDM channels and filter initialization
+  * @param  None
+  * @retval None
+  */
+static void DFSDM_Init(void)
+{
+  /* Initialize channel 2 */
+  __HAL_DFSDM_CHANNEL_RESET_HANDLE_STATE(&DfsdmChannelHandle);
+  DfsdmChannelHandle.Instance                      = DFSDM1_Channel2;
+  DfsdmChannelHandle.Init.OutputClock.Activation   = ENABLE;
+  DfsdmChannelHandle.Init.OutputClock.Selection    = DFSDM_CHANNEL_OUTPUT_CLOCK_AUDIO;
+  DfsdmChannelHandle.Init.OutputClock.Divider      = 4; /* 11.294MHz/4 = 2.82MHz */
+  DfsdmChannelHandle.Init.Input.Multiplexer        = DFSDM_CHANNEL_EXTERNAL_INPUTS;
+  DfsdmChannelHandle.Init.Input.DataPacking        = DFSDM_CHANNEL_STANDARD_MODE; /* N.U. */
+  DfsdmChannelHandle.Init.Input.Pins               = DFSDM_CHANNEL_SAME_CHANNEL_PINS;
+  DfsdmChannelHandle.Init.SerialInterface.Type     = DFSDM_CHANNEL_SPI_RISING;
+  DfsdmChannelHandle.Init.SerialInterface.SpiClock = DFSDM_CHANNEL_SPI_CLOCK_INTERNAL;
+  DfsdmChannelHandle.Init.Awd.FilterOrder          = DFSDM_CHANNEL_FASTSINC_ORDER; /* N.U. */
+  DfsdmChannelHandle.Init.Awd.Oversampling         = 10; /* N.U. */
+  DfsdmChannelHandle.Init.Offset                   = 0;
+  DfsdmChannelHandle.Init.RightBitShift            = 2;
+  if(HAL_OK != HAL_DFSDM_ChannelInit(&DfsdmChannelHandle))
+  {
+    Error_Handler();
+  }
+
+  /* Initialize filter 0 */
+  __HAL_DFSDM_FILTER_RESET_HANDLE_STATE(&DfsdmFilterHandle);
+  DfsdmFilterHandle.Instance                          = DFSDM1_Filter0;
+  DfsdmFilterHandle.Init.RegularParam.Trigger         = DFSDM_FILTER_SW_TRIGGER;
+  DfsdmFilterHandle.Init.RegularParam.FastMode        = ENABLE;
+  DfsdmFilterHandle.Init.RegularParam.DmaMode         = ENABLE;
+  DfsdmFilterHandle.Init.InjectedParam.Trigger        = DFSDM_FILTER_SW_TRIGGER; /* N.U. */
+  DfsdmFilterHandle.Init.InjectedParam.ScanMode       = ENABLE; /* N.U. */
+  DfsdmFilterHandle.Init.InjectedParam.DmaMode        = DISABLE; /* N.U. */
+  DfsdmFilterHandle.Init.InjectedParam.ExtTrigger     = DFSDM_FILTER_EXT_TRIG_TIM1_TRGO; /* N.U. */
+  DfsdmFilterHandle.Init.InjectedParam.ExtTriggerEdge = DFSDM_FILTER_EXT_TRIG_RISING_EDGE; /* N.U. */
+  DfsdmFilterHandle.Init.FilterParam.SincOrder        = DFSDM_FILTER_SINC3_ORDER;
+  DfsdmFilterHandle.Init.FilterParam.Oversampling     = 64; /* 11.294MHz/(4*64) = 44.1KHz */
+  DfsdmFilterHandle.Init.FilterParam.IntOversampling  = 1;
+  if(HAL_OK != HAL_DFSDM_FilterInit(&DfsdmFilterHandle))
+  {
+    Error_Handler();
+  }
+
+  /* Configure regular channel and continuous mode for filter 0 */
+  if(HAL_OK != HAL_DFSDM_FilterConfigRegChannel(&DfsdmFilterHandle, DFSDM_CHANNEL_2, DFSDM_CONTINUOUS_CONV_ON))
+  {
+    Error_Handler();
+  }
+}
+
+/**
+  * @brief  Playback initialization
+  * @param  None
+  * @retval None
+  */
 static void Playback_Init(void)
 {
   /* Initialize SAI */
-  __HAL_SAI_RESET_HANDLE_STATE(&hsai_BlockA1);
+  __HAL_SAI_RESET_HANDLE_STATE(&SaiHandle);
 
-  hsai_BlockA1.Instance = SAI1_Block_A;
+  SaiHandle.Instance = SAI1_Block_A;
 
-  hsai_BlockA1.Init.AudioMode      = SAI_MODEMASTER_TX;
-  hsai_BlockA1.Init.Synchro        = SAI_ASYNCHRONOUS;
-  hsai_BlockA1.Init.SynchroExt     = SAI_SYNCEXT_DISABLE;
-  hsai_BlockA1.Init.OutputDrive    = SAI_OUTPUTDRIVE_ENABLE;
-  hsai_BlockA1.Init.NoDivider      = SAI_MASTERDIVIDER_ENABLE;
-  hsai_BlockA1.Init.FIFOThreshold  = SAI_FIFOTHRESHOLD_1QF;
-  hsai_BlockA1.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_48K;
-  hsai_BlockA1.Init.Mckdiv         = 0; /* N.U */
-  hsai_BlockA1.Init.MonoStereoMode = SAI_STEREOMODE;
-  hsai_BlockA1.Init.CompandingMode = SAI_NOCOMPANDING;
-  hsai_BlockA1.Init.TriState       = SAI_OUTPUT_NOTRELEASED;
-  hsai_BlockA1.Init.Protocol       = SAI_FREE_PROTOCOL;
-  hsai_BlockA1.Init.DataSize       = SAI_DATASIZE_16;
-  hsai_BlockA1.Init.FirstBit       = SAI_FIRSTBIT_MSB;
-  hsai_BlockA1.Init.ClockStrobing  = SAI_CLOCKSTROBING_FALLINGEDGE;
+  SaiHandle.Init.AudioMode      = SAI_MODEMASTER_TX;
+  SaiHandle.Init.Synchro        = SAI_ASYNCHRONOUS;
+  SaiHandle.Init.SynchroExt     = SAI_SYNCEXT_DISABLE;
+  SaiHandle.Init.OutputDrive    = SAI_OUTPUTDRIVE_ENABLE;
+  SaiHandle.Init.NoDivider      = SAI_MASTERDIVIDER_ENABLE;
+  SaiHandle.Init.FIFOThreshold  = SAI_FIFOTHRESHOLD_1QF;
+  SaiHandle.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_44K;
+  SaiHandle.Init.Mckdiv         = 0; /* N.U */
+  SaiHandle.Init.MonoStereoMode = SAI_STEREOMODE;
+  SaiHandle.Init.CompandingMode = SAI_NOCOMPANDING;
+  SaiHandle.Init.TriState       = SAI_OUTPUT_NOTRELEASED;
+  SaiHandle.Init.Protocol       = SAI_FREE_PROTOCOL;
+  SaiHandle.Init.DataSize       = SAI_DATASIZE_16;
+  SaiHandle.Init.FirstBit       = SAI_FIRSTBIT_MSB;
+  SaiHandle.Init.ClockStrobing  = SAI_CLOCKSTROBING_FALLINGEDGE;
 
-  hsai_BlockA1.FrameInit.FrameLength       = 32;
-  hsai_BlockA1.FrameInit.ActiveFrameLength = 16;
-  hsai_BlockA1.FrameInit.FSDefinition      = SAI_FS_CHANNEL_IDENTIFICATION;
-  hsai_BlockA1.FrameInit.FSPolarity        = SAI_FS_ACTIVE_LOW;
-  hsai_BlockA1.FrameInit.FSOffset          = SAI_FS_BEFOREFIRSTBIT;
+  SaiHandle.FrameInit.FrameLength       = 32;
+  SaiHandle.FrameInit.ActiveFrameLength = 16;
+  SaiHandle.FrameInit.FSDefinition      = SAI_FS_CHANNEL_IDENTIFICATION;
+  SaiHandle.FrameInit.FSPolarity        = SAI_FS_ACTIVE_LOW;
+  SaiHandle.FrameInit.FSOffset          = SAI_FS_BEFOREFIRSTBIT;
 
-  hsai_BlockA1.SlotInit.FirstBitOffset = 0;
-  hsai_BlockA1.SlotInit.SlotSize       = SAI_SLOTSIZE_DATASIZE;
-  hsai_BlockA1.SlotInit.SlotNumber     = 2;
-  hsai_BlockA1.SlotInit.SlotActive     = (SAI_SLOTACTIVE_0 | SAI_SLOTACTIVE_1);
+  SaiHandle.SlotInit.FirstBitOffset = 0;
+  SaiHandle.SlotInit.SlotSize       = SAI_SLOTSIZE_DATASIZE;
+  SaiHandle.SlotInit.SlotNumber     = 2;
+  SaiHandle.SlotInit.SlotActive     = (SAI_SLOTACTIVE_0 | SAI_SLOTACTIVE_1);
 
-  if(HAL_OK != HAL_SAI_Init(&hsai_BlockA1))
+  if(HAL_OK != HAL_SAI_Init(&SaiHandle))
   {
     Error_Handler();
   }
 
   /* Enable SAI to generate clock used by audio driver */
-  __HAL_SAI_ENABLE(&hsai_BlockA1);
+  __HAL_SAI_ENABLE(&SaiHandle);
 
   /* Initialize audio driver */
   if(CS43L22_ID != cs43l22_drv.ReadID(AUDIO_I2C_ADDRESS))
@@ -300,6 +350,87 @@ static void Playback_Init(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @param  None
+  * @retval None
+  */
+void Error_Handler(void)
+{
+  while (1)
+  {
+    /* Toggle LED4 with a period of one second */
+    //BSP_LED_Toggle(LED4);
+    HAL_Delay(1000);
+  }
+}
+
+/**
+  * @brief  Initializes the DFSDM channel MSP.
+  * @param  hdfsdm_channel : DFSDM channel handle.
+  * @retval None
+  */
+void HAL_DFSDM_ChannelMspInit(DFSDM_Channel_HandleTypeDef *hdfsdm_channel)
+{
+  /* Init of clock, gpio and PLLSAI1 clock */
+  GPIO_InitTypeDef GPIO_Init;
+  RCC_PeriphCLKInitTypeDef RCC_PeriphCLKInitStruct;
+
+  /* Enable DFSDM clock */
+  __HAL_RCC_DFSDM1_CLK_ENABLE();
+
+  /* Configure PE9 for DFSDM_CKOUT and PE7 for DFSDM_DATIN2 */
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+  GPIO_Init.Mode      = GPIO_MODE_AF_PP;
+  GPIO_Init.Pull      = GPIO_PULLDOWN;
+  GPIO_Init.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_Init.Alternate = GPIO_AF6_DFSDM1;
+  GPIO_Init.Pin = GPIO_PIN_9;
+  HAL_GPIO_Init(GPIOE, &GPIO_Init);
+  GPIO_Init.Pin = GPIO_PIN_7;
+  HAL_GPIO_Init(GPIOE, &GPIO_Init);
+
+  /* Configure and enable PLLSAI1 clock to generate 11.294MHz */
+  RCC_PeriphCLKInitStruct.PeriphClockSelection    = RCC_PERIPHCLK_SAI1;
+  RCC_PeriphCLKInitStruct.PLLSAI1.PLLSAI1Source   = RCC_PLLSOURCE_MSI;
+  RCC_PeriphCLKInitStruct.PLLSAI1.PLLSAI1M        = 1;
+  RCC_PeriphCLKInitStruct.PLLSAI1.PLLSAI1N        = 48;
+  RCC_PeriphCLKInitStruct.PLLSAI1.PLLSAI1P        = 17;
+  RCC_PeriphCLKInitStruct.PLLSAI1.PLLSAI1ClockOut = RCC_PLLSAI1_SAI1CLK;
+  RCC_PeriphCLKInitStruct.Sai1ClockSelection      = RCC_SAI1CLKSOURCE_PLLSAI1;
+  if(HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphCLKInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/**
+  * @brief  Initializes the DFSDM filter MSP.
+  * @param  hdfsdm_filter : DFSDM filter handle.
+  * @retval None
+  */
+void HAL_DFSDM_FilterMspInit(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
+{
+  /* Configure DMA1_Channel4 */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+  hDfsdmDma.Init.Request             = DMA_REQUEST_0;
+  hDfsdmDma.Init.Direction           = DMA_PERIPH_TO_MEMORY;
+  hDfsdmDma.Init.PeriphInc           = DMA_PINC_DISABLE;
+  hDfsdmDma.Init.MemInc              = DMA_MINC_ENABLE;
+  hDfsdmDma.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
+  hDfsdmDma.Init.MemDataAlignment    = DMA_MDATAALIGN_WORD;
+  hDfsdmDma.Init.Mode                = DMA_CIRCULAR;
+  hDfsdmDma.Init.Priority            = DMA_PRIORITY_HIGH;
+  hDfsdmDma.Instance                 = DMA1_Channel4;
+  __HAL_LINKDMA(hdfsdm_filter, hdmaReg, hDfsdmDma);
+  if (HAL_OK != HAL_DMA_Init(&hDfsdmDma))
+  {
+    Error_Handler();
+  }
+  HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, 0x01, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel4_IRQn);
 }
 
 /**
@@ -326,17 +457,17 @@ void HAL_SAI_MspInit(SAI_HandleTypeDef *hsai)
 
   /* Configure DMA used for SAI1 */
   __HAL_RCC_DMA2_CLK_ENABLE();
-  hdma_sai1_a.Init.Request             = DMA_REQUEST_1;
-  hdma_sai1_a.Init.Direction           = DMA_MEMORY_TO_PERIPH;
-  hdma_sai1_a.Init.PeriphInc           = DMA_PINC_DISABLE;
-  hdma_sai1_a.Init.MemInc              = DMA_MINC_ENABLE;
-  hdma_sai1_a.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
-  hdma_sai1_a.Init.MemDataAlignment    = DMA_MDATAALIGN_HALFWORD;
-  hdma_sai1_a.Init.Mode                = DMA_CIRCULAR;
-  hdma_sai1_a.Init.Priority            = DMA_PRIORITY_HIGH;
-  hdma_sai1_a.Instance                 = DMA2_Channel1;
-  __HAL_LINKDMA(hsai, hdmatx, hdma_sai1_a);
-  if (HAL_OK != HAL_DMA_Init(&hdma_sai1_a))
+  hSaiDma.Init.Request             = DMA_REQUEST_1;
+  hSaiDma.Init.Direction           = DMA_MEMORY_TO_PERIPH;
+  hSaiDma.Init.PeriphInc           = DMA_PINC_DISABLE;
+  hSaiDma.Init.MemInc              = DMA_MINC_ENABLE;
+  hSaiDma.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
+  hSaiDma.Init.MemDataAlignment    = DMA_MDATAALIGN_HALFWORD;
+  hSaiDma.Init.Mode                = DMA_CIRCULAR;
+  hSaiDma.Init.Priority            = DMA_PRIORITY_HIGH;
+  hSaiDma.Instance                 = DMA2_Channel1;
+  __HAL_LINKDMA(hsai, hdmatx, hSaiDma);
+  if (HAL_OK != HAL_DMA_Init(&hSaiDma))
   {
     Error_Handler();
   }
@@ -345,346 +476,25 @@ void HAL_SAI_MspInit(SAI_HandleTypeDef *hsai)
 }
 
 /**
-  * @brief System Clock Configuration
+  * @brief  Half regular conversion complete callback.
+  * @param  hdfsdm_filter : DFSDM filter handle.
   * @retval None
   */
-void SystemClock_Config(void)
+void HAL_DFSDM_FilterRegConvHalfCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
 {
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
-
-  /**Initializes the CPU, AHB and APB busses clocks 
-  */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 3;
-  RCC_OscInitStruct.PLL.PLLN = 10;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV7;
-  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
-  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /**Initializes the CPU, AHB and APB busses clocks 
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
-
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_SAI1
-                              |RCC_PERIPHCLK_I2C1;
-  PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
-  PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
-  PeriphClkInit.Sai1ClockSelection = RCC_SAI1CLKSOURCE_PLL;
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /**Configure the main internal regulator output voltage 
-  */
-  if (HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1) != HAL_OK)
-  {
-    Error_Handler();
-  }
+  DmaRecHalfBuffCplt = 1;
 }
 
 /**
-  * @brief DAC1 Initialization Function
-  * @param None
+  * @brief  Regular conversion complete callback.
+  * @note   In interrupt mode, user has to read conversion value in this function
+            using HAL_DFSDM_FilterGetRegularValue.
+  * @param  hdfsdm_filter : DFSDM filter handle.
   * @retval None
   */
-static void MX_DAC1_Init(void)
+void HAL_DFSDM_FilterRegConvCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
 {
-
-  /* USER CODE BEGIN DAC1_Init 0 */
-
-  /* USER CODE END DAC1_Init 0 */
-
-  DAC_ChannelConfTypeDef sConfig = {0};
-
-  /* USER CODE BEGIN DAC1_Init 1 */
-
-  /* USER CODE END DAC1_Init 1 */
-  /**DAC Initialization 
-  */
-  hdac1.Instance = DAC1;
-  if (HAL_DAC_Init(&hdac1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /**DAC channel OUT1 config 
-  */
-  sConfig.DAC_SampleAndHold = DAC_SAMPLEANDHOLD_DISABLE;
-  sConfig.DAC_Trigger = DAC_TRIGGER_T6_TRGO;
-  sConfig.DAC_OutputBuffer = DAC_OUTPUTBUFFER_ENABLE;
-  sConfig.DAC_ConnectOnChipPeripheral = DAC_CHIPCONNECT_ENABLE;
-  sConfig.DAC_UserTrimming = DAC_TRIMMING_FACTORY;
-  if (HAL_DAC_ConfigChannel(&hdac1, &sConfig, DAC_CHANNEL_1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN DAC1_Init 2 */
-
-  /* USER CODE END DAC1_Init 2 */
-
-}
-
-/**
-  * @brief I2C1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_I2C1_Init(void)
-{
-
-  /* USER CODE BEGIN I2C1_Init 0 */
-
-  /* USER CODE END I2C1_Init 0 */
-
-  /* USER CODE BEGIN I2C1_Init 1 */
-
-  /* USER CODE END I2C1_Init 1 */
-  hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = 0x10909CEC;
-  hi2c1.Init.OwnAddress1 = 0;
-  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-  hi2c1.Init.OwnAddress2 = 0;
-  hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
-  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /**Configure Analogue filter 
-  */
-  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /**Configure Digital filter 
-  */
-  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN I2C1_Init 2 */
-
-  /* USER CODE END I2C1_Init 2 */
-
-}
-
-/**
-  * @brief SAI1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_SAI1_Init(void)
-{
-
-  /* USER CODE BEGIN SAI1_Init 0 */
-
-  /* USER CODE END SAI1_Init 0 */
-
-  /* USER CODE BEGIN SAI1_Init 1 */
-
-  /* USER CODE END SAI1_Init 1 */
-  hsai_BlockA1.Instance = SAI1_Block_A;
-  hsai_BlockA1.Init.Protocol = SAI_FREE_PROTOCOL;
-  hsai_BlockA1.Init.AudioMode = SAI_MODEMASTER_TX;
-  hsai_BlockA1.Init.DataSize = SAI_DATASIZE_16;
-  hsai_BlockA1.Init.FirstBit = SAI_FIRSTBIT_MSB;
-  hsai_BlockA1.Init.ClockStrobing = SAI_CLOCKSTROBING_FALLINGEDGE;
-  hsai_BlockA1.Init.Synchro = SAI_ASYNCHRONOUS;
-  hsai_BlockA1.Init.OutputDrive = SAI_OUTPUTDRIVE_ENABLE;
-  hsai_BlockA1.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
-  hsai_BlockA1.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_1QF;
-  hsai_BlockA1.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_48K;
-  hsai_BlockA1.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
-  hsai_BlockA1.Init.MonoStereoMode = SAI_STEREOMODE;
-  hsai_BlockA1.Init.CompandingMode = SAI_NOCOMPANDING;
-  hsai_BlockA1.Init.TriState = SAI_OUTPUT_NOTRELEASED;
-  hsai_BlockA1.FrameInit.FrameLength = 32;
-  hsai_BlockA1.FrameInit.ActiveFrameLength = 16;
-  hsai_BlockA1.FrameInit.FSDefinition = SAI_FS_CHANNEL_IDENTIFICATION;
-  hsai_BlockA1.FrameInit.FSPolarity = SAI_FS_ACTIVE_LOW;
-  hsai_BlockA1.FrameInit.FSOffset = SAI_FS_BEFOREFIRSTBIT;
-  hsai_BlockA1.SlotInit.FirstBitOffset = 0;
-  hsai_BlockA1.SlotInit.SlotSize = SAI_SLOTSIZE_DATASIZE;
-  hsai_BlockA1.SlotInit.SlotNumber = 2;
-  hsai_BlockA1.SlotInit.SlotActive = 0x00000003;
-  if (HAL_SAI_Init(&hsai_BlockA1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN SAI1_Init 2 */
-  __HAL_SAI_ENABLE(&hsai_BlockA1);
-  /* USER CODE END SAI1_Init 2 */
-
-}
-
-/**
-  * @brief TIM6 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_TIM6_Init(void)
-{
-
-  /* USER CODE BEGIN TIM6_Init 0 */
-
-  /* USER CODE END TIM6_Init 0 */
-
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
-
-  /* USER CODE BEGIN TIM6_Init 1 */
-
-  /* USER CODE END TIM6_Init 1 */
-  htim6.Instance = TIM6;
-  htim6.Init.Prescaler = TIM_PRESCALER;
-  htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim6.Init.Period = TIM_PERIOD;
-  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN TIM6_Init 2 */
-
-  /* USER CODE END TIM6_Init 2 */
-
-}
-
-/**
-  * @brief USART2 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_USART2_UART_Init(void)
-{
-
-  /* USER CODE BEGIN USART2_Init 0 */
-
-  /* USER CODE END USART2_Init 0 */
-
-  /* USER CODE BEGIN USART2_Init 1 */
-
-  /* USER CODE END USART2_Init 1 */
-  huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
-  huart2.Init.WordLength = UART_WORDLENGTH_8B;
-  huart2.Init.StopBits = UART_STOPBITS_1;
-  huart2.Init.Parity = UART_PARITY_NONE;
-  huart2.Init.Mode = UART_MODE_TX_RX;
-  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USART2_Init 2 */
-
-  /* USER CODE END USART2_Init 2 */
-
-}
-
-/** 
-  * Enable DMA controller clock
-  */
-static void MX_DMA_Init(void) 
-{
-  /* DMA controller clock enable */
-  __HAL_RCC_DMA1_CLK_ENABLE();
-  __HAL_RCC_DMA2_CLK_ENABLE();
-
-  /* DMA interrupt init */
-  /* DMA1_Channel3_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel3_IRQn);
-  /* DMA1_Channel6_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel6_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel6_IRQn);
-  /* DMA1_Channel7_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel7_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel7_IRQn);
-  /* DMA2_Channel1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Channel1_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA2_Channel1_IRQn);
-
-}
-
-/**
-  * @brief GPIO Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_GPIO_Init(void)
-{
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-  /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOE_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOH_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, AUDIO_RST_Pin|LD_Green_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(XSHUT_GPIO_Port, XSHUT_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pins : AUDIO_RST_Pin LD_Green_Pin */
-  GPIO_InitStruct.Pin = AUDIO_RST_Pin|LD_Green_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : XSHUT_Pin */
-  GPIO_InitStruct.Pin = XSHUT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(XSHUT_GPIO_Port, &GPIO_InitStruct);
-
-}
-
-/* USER CODE BEGIN 4 */
-
-/* USER CODE END 4 */
-
-/**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
-void Error_Handler(void)
-{
-  /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-
-  /* USER CODE END Error_Handler_Debug */
+  DmaRecBuffCplt = 1;
 }
 
 #ifdef  USE_FULL_ASSERT
@@ -695,13 +505,24 @@ void Error_Handler(void)
   * @param  line: assert_param error line source number
   * @retval None
   */
-void assert_failed(char *file, uint32_t line)
+void assert_failed(uint8_t *file, uint32_t line)
 { 
-  /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
-     tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-  /* USER CODE END 6 */
+     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+
+  /* Infinite loop */
+  while (1)
+  {
+  }
 }
-#endif /* USE_FULL_ASSERT */
+#endif
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
