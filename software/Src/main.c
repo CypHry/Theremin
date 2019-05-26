@@ -100,6 +100,12 @@ int16_t                      PlayBuff[4096];
 uint32_t                     DmaRecHalfBuffCplt  = 0;
 uint32_t                     DmaRecBuffCplt      = 0;
 uint32_t                     PlaybackStarted         = 0;
+
+// temp, to be deleted
+DMA_HandleTypeDef hdma_dac_ch1;
+DMA_HandleTypeDef hdma_sai1_a;
+DMA_HandleTypeDef hdma_usart2_rx;
+DMA_HandleTypeDef hdma_usart2_tx;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void DFSDM_Init(void);
@@ -483,18 +489,6 @@ void HAL_SAI_MspInit(SAI_HandleTypeDef *hsai)
 void HAL_DFSDM_FilterRegConvHalfCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
 {
   DmaRecHalfBuffCplt = 1;
-}
-
-/**
-  * @brief  Regular conversion complete callback.
-  * @note   In interrupt mode, user has to read conversion value in this function
-            using HAL_DFSDM_FilterGetRegularValue.
-  * @param  hdfsdm_filter : DFSDM filter handle.
-  * @retval None
-  */
-void HAL_DFSDM_FilterRegConvCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
-{
-  DmaRecBuffCplt = 1;
 }
 
 #ifdef  USE_FULL_ASSERT

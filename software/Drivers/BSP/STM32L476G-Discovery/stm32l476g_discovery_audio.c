@@ -841,23 +841,23 @@ void HAL_DFSDM_FilterRegConvCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filt
   * @param  hdfsdm_filter : DFSDM filter handle.
   * @retval None
   */
-void HAL_DFSDM_FilterRegConvHalfCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
-{
-  uint32_t index;
-  uint32_t recbufsize = (hAudioIn.RecSize/DEFAULT_AUDIO_IN_CHANNEL_NBR);
-  
-  
-  for(index = 0; index < (recbufsize/2); index++)
-  {
-    hAudioIn.pRecBuf[index] = (uint16_t)(SaturaLH((hAudioIn.LeftRecBuff[index] >> 8), -32768, 32767));
-  }
-  
-  /* Invoke the registered 'HalfTransfer' callback function (if any) */
-  if (hAudioIn.CbHalfTransfer != (Audio_CallbackTypeDef)NULL)
-  {
-    hAudioIn.CbHalfTransfer();
-  }
-}
+//void HAL_DFSDM_FilterRegConvHalfCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
+//{
+//  uint32_t index;
+//  uint32_t recbufsize = (hAudioIn.RecSize/DEFAULT_AUDIO_IN_CHANNEL_NBR);
+//
+//
+//  for(index = 0; index < (recbufsize/2); index++)
+//  {
+//    hAudioIn.pRecBuf[index] = (uint16_t)(SaturaLH((hAudioIn.LeftRecBuff[index] >> 8), -32768, 32767));
+//  }
+//
+//  /* Invoke the registered 'HalfTransfer' callback function (if any) */
+//  if (hAudioIn.CbHalfTransfer != (Audio_CallbackTypeDef)NULL)
+//  {
+//    hAudioIn.CbHalfTransfer();
+//  }
+//}
 
 /**
   * @brief  Error callback. 
@@ -1249,24 +1249,24 @@ static uint8_t AUDIO_DFSDMx_DeInit(void)
   * @param  hdfsdm_channel : DFSDM channel handle.
   * @retval None
   */
-void HAL_DFSDM_ChannelMspInit(DFSDM_Channel_HandleTypeDef *hdfsdm_channel)
-{
-  GPIO_InitTypeDef  GPIO_InitStruct;  
-
-  /* Enable DFSDM clock */
-  AUDIO_DFSDMx_CLK_ENABLE();
-  
-  /* Enable GPIO clock */
-  AUDIO_DFSDMx_CKOUT_DMIC_DATIN_GPIO_CLK_ENABLE();
-  
-  /* DFSDM pins configuration: DFSDM_CKOUT, DMIC_DATIN pins ------------------*/
-  GPIO_InitStruct.Pin = AUDIO_DFSDMx_CKOUT_PIN | AUDIO_DFSDMx_DMIC_DATIN_PIN;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = AUDIO_DFSDMx_CKOUT_DMIC_DATIN_AF;
-  HAL_GPIO_Init(AUDIO_DFSDMx_CKOUT_DMIC_DATIN_GPIO_PORT, &GPIO_InitStruct);
-}
+//void HAL_DFSDM_ChannelMspInit(DFSDM_Channel_HandleTypeDef *hdfsdm_channel)
+//{
+//  GPIO_InitTypeDef  GPIO_InitStruct;
+//
+//  /* Enable DFSDM clock */
+//  AUDIO_DFSDMx_CLK_ENABLE();
+//
+//  /* Enable GPIO clock */
+//  AUDIO_DFSDMx_CKOUT_DMIC_DATIN_GPIO_CLK_ENABLE();
+//
+//  /* DFSDM pins configuration: DFSDM_CKOUT, DMIC_DATIN pins ------------------*/
+//  GPIO_InitStruct.Pin = AUDIO_DFSDMx_CKOUT_PIN | AUDIO_DFSDMx_DMIC_DATIN_PIN;
+//  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+//  GPIO_InitStruct.Pull = GPIO_NOPULL;
+//  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+//  GPIO_InitStruct.Alternate = AUDIO_DFSDMx_CKOUT_DMIC_DATIN_AF;
+//  HAL_GPIO_Init(AUDIO_DFSDMx_CKOUT_DMIC_DATIN_GPIO_PORT, &GPIO_InitStruct);
+//}
 
 /**
   * @brief  De-initializes the DFSDM channel MSP.
@@ -1298,39 +1298,39 @@ void HAL_DFSDM_ChannelMspDeInit(DFSDM_Channel_HandleTypeDef *hdfsdm_channel)
   * @param  hdfsdm_filter : DFSDM filter handle.
   * @retval None
   */
-void HAL_DFSDM_FilterMspInit(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
-{
-  /* Enable DFSDM clock */
-  AUDIO_DFSDMx_CLK_ENABLE();
-  
-  /* Enable the DMA clock */
-  AUDIO_DFSDMx_DMAx_CLK_ENABLE();
-    
-  /* Configure the hAudioIn.hDmaDfsdmLeft handle parameters */   
-  hAudioIn.hDmaDfsdmLeft.Init.Request             = DMA_REQUEST_0;
-  hAudioIn.hDmaDfsdmLeft.Init.Direction           = DMA_PERIPH_TO_MEMORY;
-  hAudioIn.hDmaDfsdmLeft.Init.PeriphInc           = DMA_PINC_DISABLE;
-  hAudioIn.hDmaDfsdmLeft.Init.MemInc              = DMA_MINC_ENABLE;
-  hAudioIn.hDmaDfsdmLeft.Init.PeriphDataAlignment = AUDIO_DFSDMx_DMAx_PERIPH_DATA_SIZE;
-  hAudioIn.hDmaDfsdmLeft.Init.MemDataAlignment    = AUDIO_DFSDMx_DMAx_MEM_DATA_SIZE;
-  hAudioIn.hDmaDfsdmLeft.Init.Mode                = DMA_CIRCULAR;
-  hAudioIn.hDmaDfsdmLeft.Init.Priority            = DMA_PRIORITY_HIGH;
-
-  hAudioIn.hDmaDfsdmLeft.Instance               = AUDIO_DFSDMx_DMAx_LEFT_CHANNEL;
-  
-  /* Associate the DMA handle */
-  __HAL_LINKDMA(hdfsdm_filter, hdmaReg, hAudioIn.hDmaDfsdmLeft);
-  
-  /* Reset DMA handle state */
-  __HAL_DMA_RESET_HANDLE_STATE(&hAudioIn.hDmaDfsdmLeft);
-
-  /* Configure the DMA Channel */
-  HAL_DMA_Init(&hAudioIn.hDmaDfsdmLeft);      
-
-  /* DMA IRQ Channel configuration */
-    HAL_NVIC_SetPriority(AUDIO_DFSDMx_DMAx_LEFT_IRQ, AUDIO_OUT_IRQ_PREPRIO, 0);
-    HAL_NVIC_EnableIRQ(AUDIO_DFSDMx_DMAx_LEFT_IRQ);
-  }
+//void HAL_DFSDM_FilterMspInit(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
+//{
+//  /* Enable DFSDM clock */
+//  AUDIO_DFSDMx_CLK_ENABLE();
+//
+//  /* Enable the DMA clock */
+//  AUDIO_DFSDMx_DMAx_CLK_ENABLE();
+//
+//  /* Configure the hAudioIn.hDmaDfsdmLeft handle parameters */
+//  hAudioIn.hDmaDfsdmLeft.Init.Request             = DMA_REQUEST_0;
+//  hAudioIn.hDmaDfsdmLeft.Init.Direction           = DMA_PERIPH_TO_MEMORY;
+//  hAudioIn.hDmaDfsdmLeft.Init.PeriphInc           = DMA_PINC_DISABLE;
+//  hAudioIn.hDmaDfsdmLeft.Init.MemInc              = DMA_MINC_ENABLE;
+//  hAudioIn.hDmaDfsdmLeft.Init.PeriphDataAlignment = AUDIO_DFSDMx_DMAx_PERIPH_DATA_SIZE;
+//  hAudioIn.hDmaDfsdmLeft.Init.MemDataAlignment    = AUDIO_DFSDMx_DMAx_MEM_DATA_SIZE;
+//  hAudioIn.hDmaDfsdmLeft.Init.Mode                = DMA_CIRCULAR;
+//  hAudioIn.hDmaDfsdmLeft.Init.Priority            = DMA_PRIORITY_HIGH;
+//
+//  hAudioIn.hDmaDfsdmLeft.Instance               = AUDIO_DFSDMx_DMAx_LEFT_CHANNEL;
+//
+//  /* Associate the DMA handle */
+//  __HAL_LINKDMA(hdfsdm_filter, hdmaReg, hAudioIn.hDmaDfsdmLeft);
+//
+//  /* Reset DMA handle state */
+//  __HAL_DMA_RESET_HANDLE_STATE(&hAudioIn.hDmaDfsdmLeft);
+//
+//  /* Configure the DMA Channel */
+//  HAL_DMA_Init(&hAudioIn.hDmaDfsdmLeft);
+//
+//  /* DMA IRQ Channel configuration */
+//    HAL_NVIC_SetPriority(AUDIO_DFSDMx_DMAx_LEFT_IRQ, AUDIO_OUT_IRQ_PREPRIO, 0);
+//    HAL_NVIC_EnableIRQ(AUDIO_DFSDMx_DMAx_LEFT_IRQ);
+//  }
 
  /**
   * @brief  De-initializes the DFSDM filter MSP.
