@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * @file    DFSDM/DFSDM_AudioRecord/Inc/stm32l4xx_it.h
+  * @file    DFSDM/DFSDM_AudioRecord/Inc/main.h
   * @author  MCD Application Team
-  * @brief   This file contains the headers of the interrupt handlers.
+  * @brief   Header for main.c module
   ******************************************************************************
   * @attention
   *
@@ -34,36 +34,21 @@
   */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __STM32L4xx_IT_H
-#define __STM32L4xx_IT_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef __MAIN_H
+#define __MAIN_H
 
 /* Includes ------------------------------------------------------------------*/
+#include "stm32l4xx_hal.h"
+#include "stm32l476g_discovery.h"
+#include "audio.h"
+#include "../Components/cs43l22/cs43l22.h"
+
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
+void Error_Handler(void);
 
-void NMI_Handler(void);
-void HardFault_Handler(void);
-void MemManage_Handler(void);
-void BusFault_Handler(void);
-void UsageFault_Handler(void);
-void SVC_Handler(void);
-void DebugMon_Handler(void);
-void PendSV_Handler(void);
-void SysTick_Handler(void);
-
-void DMA1_Channel4_IRQHandler(void);
-void DMA2_Channel1_IRQHandler(void);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* __STM32L4xx_IT_H */
+#endif /* __MAIN_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

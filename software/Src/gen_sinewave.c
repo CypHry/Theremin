@@ -23,7 +23,7 @@ void SineWave_generate(SineWaveHandler hsin, RangingData *data)
 //	hsin->amp = 1.0*data->range_mm/1700;
 //	hsin->freq = 1.0*data->range_mm;
 	hsin->amp = 1;
-	hsin->freq = 800;
+	hsin->freq = 20;
 	hsin->sampleNum = AUDIO_FREQ/hsin->freq;
 
 	float32_t step = 2.0*PI/hsin->sampleNum;
@@ -33,7 +33,7 @@ void SineWave_generate(SineWaveHandler hsin, RangingData *data)
 	{
 		sample = hsin->amp*((arm_sin_f32(pos)+1)*(UINT16_MAX>>1));
 		lookup[i]= (uint16_t)sample;
-		sampleShow = lookup[i];
+		//sampleShow = lookup[i];
 		pos+=step;
 	}
 	//hsin->data = lookup;

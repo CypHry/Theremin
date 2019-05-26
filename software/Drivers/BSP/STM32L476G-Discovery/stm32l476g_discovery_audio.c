@@ -819,22 +819,22 @@ uint8_t BSP_AUDIO_IN_SetFrequency(uint32_t AudioFreq)
   * @param  hdfsdm_filter : DFSDM filter handle.
   * @retval None
   */
-void HAL_DFSDM_FilterRegConvCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
-{
-  uint32_t index;
-  uint32_t recbufsize = (hAudioIn.RecSize/DEFAULT_AUDIO_IN_CHANNEL_NBR);
-  
-  for(index = (recbufsize/2); index < recbufsize; index++)
-  {
-    hAudioIn.pRecBuf[index] = (uint16_t)(SaturaLH((hAudioIn.LeftRecBuff[index] >> 8), -32768, 32767));
-  }
-  
-  /* Invoke the registered 'TransferComplete' function (if any) */
-  if (hAudioIn.CbTransferComplete != (Audio_CallbackTypeDef)NULL)
-  {
-    hAudioIn.CbTransferComplete();
-  }
-}
+//void HAL_DFSDM_FilterRegConvCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
+//{
+//  uint32_t index;
+//  uint32_t recbufsize = (hAudioIn.RecSize/DEFAULT_AUDIO_IN_CHANNEL_NBR);
+//
+//  for(index = (recbufsize/2); index < recbufsize; index++)
+//  {
+//    hAudioIn.pRecBuf[index] = (uint16_t)(SaturaLH((hAudioIn.LeftRecBuff[index] >> 8), -32768, 32767));
+//  }
+//
+//  /* Invoke the registered 'TransferComplete' function (if any) */
+//  if (hAudioIn.CbTransferComplete != (Audio_CallbackTypeDef)NULL)
+//  {
+//    hAudioIn.CbTransferComplete();
+//  }
+//}
 
 /**
   * @brief  Half regular conversion complete callback. 

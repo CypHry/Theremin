@@ -18,8 +18,8 @@
 #include "main.h"
 
 
-#define AUDIO_FREQ 44642
-#define LOOKUP_MAXSIZE 300
+#define AUDIO_FREQ 44000
+#define LOOKUP_MAXSIZE 8000
 #define MAX12BIT 4095
 #define MAX12BIT_2 (MAX12BIT>>1)
 #define MAX8BIT 255
@@ -46,7 +46,7 @@ typedef SineWave *SineWaveHandler;
 
 void SineWave_init(SineWaveHandler hsin);
 void SineWave_generate(SineWaveHandler hsin, RangingData *data);
-void SineWave_adjustFreq(SineWaveHandler hsin,  TIM_HandleTypeDef *htim);
+//void SineWave_adjustFreq(SineWaveHandler hsin,  TIM_HandleTypeDef *htim);
 
 
 #endif

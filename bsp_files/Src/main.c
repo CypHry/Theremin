@@ -1,16 +1,13 @@
-/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
+  * @file    DFSDM/DFSDM_AudioRecord/Src/main.c
+  * @author  MCD Application Team
+  * @brief   This example describes how to use DFSDM HAL API to realize
+  *          audio recording.
   ******************************************************************************
-  ** This notice applies to any and all portions of this file
-  * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether
-  * inserted by the user or by software development tools
-  * are owned by their respective copyright owners.
+  * @attention
   *
-  * COPYRIGHT(c) 2019 STMicroelectronics
+  * <h2><center>&copy; COPYRIGHT(c) 2017 STMicroelectronics</center></h2>
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -36,37 +33,21 @@
   *
   ******************************************************************************
   */
-/* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
-#include "gen_sinewave.h"
-#include "VL53L1X.h"
-#include "theremin.h"
-#include "CS43L22.h"
-#include "audio.h"
-#include "cs43l22.h"
-//#include "stm32l476g_discovery_audio.h"
-/* USER CODE END Includes */
+/** @addtogroup STM32L4xx_HAL_Examples
+  * @{
+  */
+
+/** @addtogroup DFSDM_AudioRecord
+  * @{
+  */
 
 /* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN PTD */
-/* USER CODE END PTD */
-
 /* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
-
-/* USER CODE END PD */
-
 /* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
-
-/* USER CODE END PM */
-
-/* Private variables ---------------------------------------------------------*/
 #define SaturaLH(N, L, H) (((N)<(L))?(L):(((N)>(H))?(H):(N)))
 /* Private variables ---------------------------------------------------------*/
 DFSDM_Channel_HandleTypeDef  DfsdmChannelHandle;
@@ -80,15 +61,6 @@ int16_t                      PlayBuff[4096];
 uint32_t                     DmaRecHalfBuffCplt  = 0;
 uint32_t                     DmaRecBuffCplt      = 0;
 uint32_t                     PlaybackStarted         = 0;
-
-// temp, to be deleted
-DMA_HandleTypeDef hdma_dac_ch1;
-DMA_HandleTypeDef hdma_sai1_a;
-DMA_HandleTypeDef hdma_usart2_rx;
-DMA_HandleTypeDef hdma_usart2_tx;
-
-SineWave sine;
-SineWaveHandler hsin = &sine;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void DFSDM_Init(void);
@@ -103,14 +75,13 @@ static void Playback_Init(void);
   */
 int main(void)
 {
-	RangingData data;
   uint32_t i;
   /* STM32L4xx HAL library initialization:
        - Configure the Flash prefetch
-       - Systick timer is configured by default as source of time base, but user
-         can eventually implement his proper time base source (a general purpose
-         timer for example or other time source), keeping in mind that Time base
-         duration should be kept 1ms since PPP_TIMEOUT_VALUEs are defined and
+       - Systick timer is configured by default as source of time base, but user 
+         can eventually implement his proper time base source (a general purpose 
+         timer for example or other time source), keeping in mind that Time base 
+         duration should be kept 1ms since PPP_TIMEOUT_VALUEs are defined and 
          handled in milliseconds basis.
        - Set NVIC Group Priority to 4
        - Low Level Initialization
@@ -121,67 +92,55 @@ int main(void)
   SystemClock_Config();
 
   /* Configure LED4 */
-  //BSP_LED_Init(LED4);
-//	HAL_GPIO_TogglePin(LD_Green_GPIO_Port,LD_Green_Pin);
-//	HAL_Delay(500);
-//	HAL_GPIO_TogglePin(LD_Green_GPIO_Port,LD_Green_Pin);
-  SineWave_generate(hsin, &data);
+  BSP_LED_Init(LED4);
 
   /* Initialize DFSDM channels and filter for record */
   DFSDM_Init();
 
   /* Initialize playback */
   Playback_Init();
-
+  
   /* Start DFSDM conversions */
   if(HAL_OK != HAL_DFSDM_FilterRegularStart_DMA(&DfsdmFilterHandle, RecBuff, 2048))
   {
     Error_Handler();
   }
-
+  
   /* Start loopback */
   while(1)
   {
-
-	  audio_drv->Play(AUDIO_I2C_ADDRESS, (uint16_t *) &lookup[0], hsin->sampleNum);
-
-	  HAL_SAI_Transmit_DMA(&SaiHandle, (uint8_t *) &lookup[0], hsin->sampleNum);
-
-//	  HAL_GPIO_TogglePin(LD_Green_GPIO_Port,LD_Green_Pin);
-//	  	HAL_Delay(500);
-//	  	HAL_GPIO_TogglePin(LD_Green_GPIO_Port,LD_Green_Pin);
-//    if(DmaRecHalfBuffCplt == 1)
-//    {
-//      /* Store values on Play buff */
-//      for(i = 0; i < 1024; i++)
-//      {
-//        PlayBuff[2*i]     = SaturaLH((RecBuff[i] >> 8), -32768, 32767);
-//        PlayBuff[(2*i)+1] = PlayBuff[2*i];
-//      }
-//      if(PlaybackStarted == 0)
-//      {
-//        if(0 != audio_drv->Play(AUDIO_I2C_ADDRESS, (uint16_t *) &PlayBuff[0], 4096))
-//        {
-//          Error_Handler();
-//        }
-//        if(HAL_OK != HAL_SAI_Transmit_DMA(&SaiHandle, (uint8_t *) &PlayBuff[0], 4096))
-//        {
-//          Error_Handler();
-//        }
-//        PlaybackStarted = 1;
-//      }
-//      DmaRecHalfBuffCplt  = 0;
-//    }
-//    if(DmaRecBuffCplt == 1)
-//    {
-//      /* Store values on Play buff */
-//      for(i = 1024; i < 2048; i++)
-//      {
-//        PlayBuff[2*i]     = SaturaLH((RecBuff[i] >> 8), -32768, 32767);
-//        PlayBuff[(2*i)+1] = PlayBuff[2*i];
-//      }
-//      DmaRecBuffCplt  = 0;
-//    }
+    if(DmaRecHalfBuffCplt == 1)
+    {
+      /* Store values on Play buff */
+      for(i = 0; i < 1024; i++)
+      {
+        PlayBuff[2*i]     = SaturaLH((RecBuff[i] >> 8), -32768, 32767);
+        PlayBuff[(2*i)+1] = PlayBuff[2*i];
+      }
+      if(PlaybackStarted == 0)
+      {
+        if(0 != audio_drv->Play(AUDIO_I2C_ADDRESS, (uint16_t *) &PlayBuff[0], 4096))
+        {
+          Error_Handler();
+        }
+        if(HAL_OK != HAL_SAI_Transmit_DMA(&SaiHandle, (uint8_t *) &PlayBuff[0], 4096))
+        {
+          Error_Handler();
+        }
+        PlaybackStarted = 1;
+      }      
+      DmaRecHalfBuffCplt  = 0;
+    }
+    if(DmaRecBuffCplt == 1)
+    {
+      /* Store values on Play buff */
+      for(i = 1024; i < 2048; i++)
+      {
+        PlayBuff[2*i]     = SaturaLH((RecBuff[i] >> 8), -32768, 32767);
+        PlayBuff[(2*i)+1] = PlayBuff[2*i];
+      }
+      DmaRecBuffCplt  = 0;
+    }
   }
 }
 
@@ -226,14 +185,14 @@ void SystemClock_Config(void)
     /* Initialization Error */
     while(1);
   }
-
-  /* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
+  
+  /* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2 
      clocks dividers */
   RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;  
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;  
   if(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
   {
     /* Initialization Error */
@@ -322,7 +281,7 @@ static void Playback_Init(void)
   SaiHandle.Init.FirstBit       = SAI_FIRSTBIT_MSB;
   SaiHandle.Init.ClockStrobing  = SAI_CLOCKSTROBING_FALLINGEDGE;
 
-  SaiHandle.FrameInit.FrameLength       = 32;
+  SaiHandle.FrameInit.FrameLength       = 32; 
   SaiHandle.FrameInit.ActiveFrameLength = 16;
   SaiHandle.FrameInit.FSDefinition      = SAI_FS_CHANNEL_IDENTIFICATION;
   SaiHandle.FrameInit.FSPolarity        = SAI_FS_ACTIVE_LOW;
@@ -330,25 +289,25 @@ static void Playback_Init(void)
 
   SaiHandle.SlotInit.FirstBitOffset = 0;
   SaiHandle.SlotInit.SlotSize       = SAI_SLOTSIZE_DATASIZE;
-  SaiHandle.SlotInit.SlotNumber     = 2;
+  SaiHandle.SlotInit.SlotNumber     = 2; 
   SaiHandle.SlotInit.SlotActive     = (SAI_SLOTACTIVE_0 | SAI_SLOTACTIVE_1);
 
   if(HAL_OK != HAL_SAI_Init(&SaiHandle))
   {
     Error_Handler();
   }
-
+  
   /* Enable SAI to generate clock used by audio driver */
   __HAL_SAI_ENABLE(&SaiHandle);
-
+  
   /* Initialize audio driver */
   if(CS43L22_ID != cs43l22_drv.ReadID(AUDIO_I2C_ADDRESS))
   {
     Error_Handler();
   }
   audio_drv = &cs43l22_drv;
-  audio_drv->Reset(AUDIO_I2C_ADDRESS);
-  if(0 != audio_drv->Init(AUDIO_I2C_ADDRESS, OUTPUT_DEVICE_HEADPHONE, 50, AUDIO_FREQUENCY_44K))
+  audio_drv->Reset(AUDIO_I2C_ADDRESS);  
+  if(0 != audio_drv->Init(AUDIO_I2C_ADDRESS, OUTPUT_DEVICE_HEADPHONE, 90, AUDIO_FREQUENCY_44K))
   {
     Error_Handler();
   }
@@ -364,8 +323,7 @@ void Error_Handler(void)
   while (1)
   {
     /* Toggle LED4 with a period of one second */
-    //BSP_LED_Toggle(LED4);
-//	HAL_GPIO_TogglePin(LD_Green_GPIO_Port, LD_Green_Pin);
+    BSP_LED_Toggle(LED4);
     HAL_Delay(1000);
   }
 }
@@ -380,10 +338,10 @@ void HAL_DFSDM_ChannelMspInit(DFSDM_Channel_HandleTypeDef *hdfsdm_channel)
   /* Init of clock, gpio and PLLSAI1 clock */
   GPIO_InitTypeDef GPIO_Init;
   RCC_PeriphCLKInitTypeDef RCC_PeriphCLKInitStruct;
-
+  
   /* Enable DFSDM clock */
   __HAL_RCC_DFSDM1_CLK_ENABLE();
-
+  
   /* Configure PE9 for DFSDM_CKOUT and PE7 for DFSDM_DATIN2 */
   __HAL_RCC_GPIOE_CLK_ENABLE();
   GPIO_Init.Mode      = GPIO_MODE_AF_PP;
@@ -394,7 +352,7 @@ void HAL_DFSDM_ChannelMspInit(DFSDM_Channel_HandleTypeDef *hdfsdm_channel)
   HAL_GPIO_Init(GPIOE, &GPIO_Init);
   GPIO_Init.Pin = GPIO_PIN_7;
   HAL_GPIO_Init(GPIOE, &GPIO_Init);
-
+  
   /* Configure and enable PLLSAI1 clock to generate 11.294MHz */
   RCC_PeriphCLKInitStruct.PeriphClockSelection    = RCC_PERIPHCLK_SAI1;
   RCC_PeriphCLKInitStruct.PLLSAI1.PLLSAI1Source   = RCC_PLLSOURCE_MSI;
@@ -445,10 +403,10 @@ void HAL_DFSDM_FilterMspInit(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
 void HAL_SAI_MspInit(SAI_HandleTypeDef *hsai)
 {
   GPIO_InitTypeDef  GPIO_Init;
-
+  
   /* Enable SAI1 clock */
   __HAL_RCC_SAI1_CLK_ENABLE();
-
+  
   /* Configure GPIOs used for SAI1 */
   __HAL_RCC_GPIOE_CLK_ENABLE();
   GPIO_Init.Mode      = GPIO_MODE_AF_PP;
@@ -457,7 +415,7 @@ void HAL_SAI_MspInit(SAI_HandleTypeDef *hsai)
   GPIO_Init.Alternate = GPIO_AF13_SAI1;
   GPIO_Init.Pin       = (GPIO_PIN_2 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6);
   HAL_GPIO_Init(GPIOE, &GPIO_Init);
-
+  
   /* Configure DMA used for SAI1 */
   __HAL_RCC_DMA2_CLK_ENABLE();
   hSaiDma.Init.Request             = DMA_REQUEST_1;
@@ -479,7 +437,7 @@ void HAL_SAI_MspInit(SAI_HandleTypeDef *hsai)
 }
 
 /**
-  * @brief  Half regular conversion complete callback.
+  * @brief  Half regular conversion complete callback. 
   * @param  hdfsdm_filter : DFSDM filter handle.
   * @retval None
   */
@@ -489,7 +447,7 @@ void HAL_DFSDM_FilterRegConvHalfCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_
 }
 
 /**
-  * @brief  Regular conversion complete callback.
+  * @brief  Regular conversion complete callback. 
   * @note   In interrupt mode, user has to read conversion value in this function
             using HAL_DFSDM_FilterGetRegularValue.
   * @param  hdfsdm_filter : DFSDM filter handle.

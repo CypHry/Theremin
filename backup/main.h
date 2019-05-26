@@ -1,12 +1,17 @@
+/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file    DFSDM/DFSDM_AudioRecord/Inc/stm32l4xx_it.h
-  * @author  MCD Application Team
-  * @brief   This file contains the headers of the interrupt handlers.
+  * @file           : main.h
+  * @brief          : Header for main.c file.
+  *                   This file contains the common defines of the application.
   ******************************************************************************
-  * @attention
+  ** This notice applies to any and all portions of this file
+  * that are not between comment pairs USER CODE BEGIN and
+  * USER CODE END. Other portions of this file, whether 
+  * inserted by the user or by software development tools
+  * are owned by their respective copyright owners.
   *
-  * <h2><center>&copy; COPYRIGHT(c) 2017 STMicroelectronics</center></h2>
+  * COPYRIGHT(c) 2019 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -32,38 +37,63 @@
   *
   ******************************************************************************
   */
+/* USER CODE END Header */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __STM32L4xx_IT_H
-#define __STM32L4xx_IT_H
+#ifndef __MAIN_H
+#define __MAIN_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
+#include "stm32l4xx_hal.h"
+
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+
+/* USER CODE END Includes */
+
 /* Exported types ------------------------------------------------------------*/
+/* USER CODE BEGIN ET */
+
+/* USER CODE END ET */
+
 /* Exported constants --------------------------------------------------------*/
+/* USER CODE BEGIN EC */
+
+/* USER CODE END EC */
+
 /* Exported macro ------------------------------------------------------------*/
-/* Exported functions ------------------------------------------------------- */
+/* USER CODE BEGIN EM */
 
-void NMI_Handler(void);
-void HardFault_Handler(void);
-void MemManage_Handler(void);
-void BusFault_Handler(void);
-void UsageFault_Handler(void);
-void SVC_Handler(void);
-void DebugMon_Handler(void);
-void PendSV_Handler(void);
-void SysTick_Handler(void);
+/* USER CODE END EM */
 
-void DMA1_Channel4_IRQHandler(void);
-void DMA2_Channel1_IRQHandler(void);
+/* Exported functions prototypes ---------------------------------------------*/
+void Error_Handler(void);
+
+/* USER CODE BEGIN EFP */
+
+/* USER CODE END EFP */
+
+/* Private defines -----------------------------------------------------------*/
+#define TIM_PERIOD 500
+#define TIM_PRESCALER 0
+#define AUDIO_RST_Pin GPIO_PIN_3
+#define AUDIO_RST_GPIO_Port GPIOE
+#define XSHUT_Pin GPIO_PIN_0
+#define XSHUT_GPIO_Port GPIOA
+#define LD_Green_Pin GPIO_PIN_8
+#define LD_Green_GPIO_Port GPIOE
+/* USER CODE BEGIN Private defines */
+#define TIM_CLOCK 80000000
+/* USER CODE END Private defines */
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __STM32L4xx_IT_H */
+#endif /* __MAIN_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
