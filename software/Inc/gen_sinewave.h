@@ -18,8 +18,8 @@
 #include "main.h"
 
 
-#define AUDIO_FREQ 44000
-#define LOOKUP_MAXSIZE 8000
+#define AUDIO_FREQ 16000
+#define LOOKUP_MAXSIZE 16000
 #define MAX12BIT 4095
 #define MAX12BIT_2 (MAX12BIT>>1)
 #define MAX8BIT 255

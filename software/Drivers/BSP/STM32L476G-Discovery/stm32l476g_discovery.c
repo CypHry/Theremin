@@ -140,8 +140,8 @@ const uint8_t JOY_IRQn[JOYn] =   {SEL_JOY_EXTI_IRQn,
 #if defined(HAL_I2C_MODULE_ENABLED)
 uint32_t I2c1Timeout = DISCOVERY_I2C2_TIMEOUT_MAX;  /*<! Value of Timeout when I2C1 communication fails */
 uint32_t I2c2Timeout = DISCOVERY_I2C2_TIMEOUT_MAX;  /*<! Value of Timeout when I2C2 communication fails */
-static I2C_HandleTypeDef I2c1Handle;
-static I2C_HandleTypeDef I2c2Handle;
+I2C_HandleTypeDef I2c1Handle;
+I2C_HandleTypeDef I2c2Handle;
 #endif /* HAL_I2C_MODULE_ENABLED */
 
 #if defined(HAL_SPI_MODULE_ENABLED)
