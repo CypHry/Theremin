@@ -650,14 +650,14 @@ void BSP_AUDIO_OUT_RegisterCallbacks(Audio_CallbackTypeDef ErrorCallback,
   * @param  hsai: SAI handle
   * @retval None
   */
-void HAL_SAI_TxCpltCallback(SAI_HandleTypeDef *hsai)
-{
-  /* Invoke the registered 'TransferComplete' function (if any) */
-  if (hAudioOut.CbTransferComplete != (Audio_CallbackTypeDef)NULL)
-  {
-    hAudioOut.CbTransferComplete();
-  }
-}
+//void HAL_SAI_TxCpltCallback(SAI_HandleTypeDef *hsai)
+//{
+//  /* Invoke the registered 'TransferComplete' function (if any) */
+//  if (hAudioOut.CbTransferComplete != (Audio_CallbackTypeDef)NULL)
+//  {
+//    hAudioOut.CbTransferComplete();
+//  }
+//}
 
 /**
   * @brief  Tx Half Transfer completed callbacks.

@@ -157,16 +157,26 @@ int main(void)
 	VL53L1X_startContinuous(devFreq, 20);
 	HAL_Delay(100);
 
+	audio_drv->Play(AUDIO_I2C_ADDRESS, (uint16_t *) &lookup[0], hsin->sampleNum);
+
+	HAL_SAI_Transmit_DMA(&SaiHandle, (uint8_t *) &lookup[0], hsin->sampleNum);
+
 	/* Start loopback */
 	while(1)
 	{
 		VL53L1X_read(devFreq, &dataFreq ,&resultsFreq);
 
+
 		SineWave_generate(hsin, &dataFreq);
 
-		audio_drv->Play(AUDIO_I2C_ADDRESS, (uint16_t *) &lookup[0], hsin->sampleNum);
+
+		//HAL_Delay(5);
+
+		memcpy(lookup, prepare, 2*hsin->sampleNum);
 
 		HAL_SAI_Transmit_DMA(&SaiHandle, (uint8_t *) &lookup[0], hsin->sampleNum);
+
+
 
 		//	  HAL_GPIO_TogglePin(LD_Green_GPIO_Port,LD_Green_Pin);
 		//	  	HAL_Delay(500);
@@ -371,7 +381,7 @@ static void Playback_Init(void)
 	}
 	audio_drv = &cs43l22_drv;
 	audio_drv->Reset(AUDIO_I2C_ADDRESS);
-	if(0 != audio_drv->Init(AUDIO_I2C_ADDRESS, OUTPUT_DEVICE_HEADPHONE, 50, AUDIO_FREQUENCY_44K))
+	if(0 != audio_drv->Init(AUDIO_I2C_ADDRESS, OUTPUT_DEVICE_HEADPHONE, 60, AUDIO_FREQUENCY_16K))
 	{
 		Error_Handler();
 	}
@@ -423,7 +433,13 @@ void HAL_DFSDM_ChannelMspInit(DFSDM_Channel_HandleTypeDef *hdfsdm_channel)
 	RCC_PeriphCLKInitStruct.PLLSAI1.PLLSAI1Source   = RCC_PLLSOURCE_MSI;
 	RCC_PeriphCLKInitStruct.PLLSAI1.PLLSAI1M        = 1;
 	RCC_PeriphCLKInitStruct.PLLSAI1.PLLSAI1N        = 48;
+
+	//RCC_PeriphCLKInitStruct.PLLSAI1.PLLSAI1N        = 44;
+
 	RCC_PeriphCLKInitStruct.PLLSAI1.PLLSAI1P        = 17;
+
+	//RCC_PeriphCLKInitStruct.PLLSAI1.PLLSAI1P        = 17;
+
 	RCC_PeriphCLKInitStruct.PLLSAI1.PLLSAI1ClockOut = RCC_PLLSAI1_SAI1CLK;
 	RCC_PeriphCLKInitStruct.Sai1ClockSelection      = RCC_SAI1CLKSOURCE_PLLSAI1;
 	if(HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphCLKInitStruct) != HAL_OK)
@@ -522,6 +538,13 @@ void HAL_DFSDM_FilterRegConvCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filt
 {
 	DmaRecBuffCplt = 1;
 }
+
+void HAL_SAI_TxCpltCallback(SAI_HandleTypeDef *hsai)
+{
+	memcpy(lookup, prepare, 2*hsin->sampleNum);
+	HAL_SAI_Transmit_DMA(hsai, &lookup[0], hsin->sampleNum);
+}
+
 
 #ifdef  USE_FULL_ASSERT
 /**

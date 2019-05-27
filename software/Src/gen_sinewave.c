@@ -8,8 +8,8 @@
 #include "gen_sinewave.h"
 
 
-
-uint16_t lookup[LOOKUP_MAXSIZE]={0};
+int16_t lookup[2*LOOKUP_MAXSIZE]={0};
+int16_t prepare[2*LOOKUP_MAXSIZE]={0};
 
 void SineWave_init(SineWaveHandler hsin)
 {
@@ -24,15 +24,19 @@ void SineWave_generate(SineWaveHandler hsin, RangingData *data)
 //	hsin->freq = 1.0*data->range_mm;
 	hsin->amp = 1;
 	hsin->freq = data->range_mm%500;
-	hsin->sampleNum = AUDIO_FREQ/hsin->freq;
-
+	//hsin->sampleNum = ((100*hsin->freq)/500*1500+18000)/100;
+	//hsin->freq = data->range_mm*10/500+70;
+	hsin->sampleNum = 500*hsin->freq/500;
+	//hsin->sampleNum = 2*AUDIO_FREQ/hsin->freq;
+	//hsin->sampleNum = ((100*hsin->freq)/500*300+18000)/100;
 	float32_t step = 2.0*PI/hsin->sampleNum;
 	float32_t pos = 0;
 	float32_t sample;
-	for(int i=0; i<hsin->sampleNum; i++)
+	for(int i=0; i<hsin->sampleNum; i+=2)
 	{
-		sample = hsin->amp*((arm_sin_f32(pos)+1)*(UINT16_MAX>>1));
-		lookup[i]= (uint16_t)sample;
+		sample = hsin->amp*((arm_sin_f32(pos))*(INT16_MAX));
+		prepare[i]= (uint16_t)sample;
+		prepare[i+1] = prepare[i];
 		//sampleShow = lookup[i];
 		pos+=step;
 	}
