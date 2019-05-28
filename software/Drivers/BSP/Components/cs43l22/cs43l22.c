@@ -252,8 +252,8 @@ uint32_t cs43l22_Play(uint16_t DeviceAddr, uint16_t* pBuffer, uint16_t Size)
   if(Is_cs43l22_Stop == 1)
   {
     /* Enable the digital soft ramp */
-    counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_MISC_CTL, 0x06);
-	 // counter ++;
+    //counter += CODEC_IO_Write(DeviceAddr, CS43L22_REG_MISC_CTL, 0x06);
+	  counter ++;
   
     /* Enable Output device */  
     counter += cs43l22_SetMute(DeviceAddr, AUDIO_MUTE_OFF);

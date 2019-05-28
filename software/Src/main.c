@@ -172,9 +172,9 @@ int main(void)
 
 		//HAL_Delay(5);
 
-		memcpy(lookup, prepare, 2*hsin->sampleNum);
-
-		HAL_SAI_Transmit_DMA(&SaiHandle, (uint8_t *) &lookup[0], hsin->sampleNum);
+//		memcpy(lookup, prepare, 2*hsin->sampleNum);
+//
+//		HAL_SAI_Transmit_DMA(&SaiHandle, (uint8_t *) &lookup[0], hsin->sampleNum);
 
 
 
@@ -345,7 +345,7 @@ static void Playback_Init(void)
 	SaiHandle.Init.NoDivider      = SAI_MASTERDIVIDER_ENABLE;
 	SaiHandle.Init.FIFOThreshold  = SAI_FIFOTHRESHOLD_1QF;
 	//SaiHandle.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_44K;
-	SaiHandle.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_16K;
+	SaiHandle.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_44K;
 	SaiHandle.Init.Mckdiv         = 0; /* N.U */
 	SaiHandle.Init.MonoStereoMode = SAI_STEREOMODE;
 	SaiHandle.Init.CompandingMode = SAI_NOCOMPANDING;
@@ -381,7 +381,7 @@ static void Playback_Init(void)
 	}
 	audio_drv = &cs43l22_drv;
 	audio_drv->Reset(AUDIO_I2C_ADDRESS);
-	if(0 != audio_drv->Init(AUDIO_I2C_ADDRESS, OUTPUT_DEVICE_HEADPHONE, 60, AUDIO_FREQUENCY_16K))
+	if(0 != audio_drv->Init(AUDIO_I2C_ADDRESS, OUTPUT_DEVICE_HEADPHONE, 60, AUDIO_FREQUENCY_44K))
 	{
 		Error_Handler();
 	}
