@@ -46,7 +46,6 @@
 #include "gen_sinewave.h"
 #include "VL53L1X.h"
 #include "theremin.h"
-#include "CS43L22.h"
 #include "audio.h"
 #include "cs43l22.h"
 //#include "stm32l476g_discovery_audio.h"
@@ -81,13 +80,7 @@ uint32_t                     DmaRecHalfBuffCplt  = 0;
 uint32_t                     DmaRecBuffCplt      = 0;
 uint32_t                     PlaybackStarted         = 0;
 
-// temp, to be deleted
-DMA_HandleTypeDef hdma_dac_ch1;
-DMA_HandleTypeDef hdma_sai1_a;
-DMA_HandleTypeDef hdma_usart2_rx;
-DMA_HandleTypeDef hdma_usart2_tx;
 
-extern I2C_HandleTypeDef I2c2Handle;
 extern I2C_HandleTypeDef I2c1Handle;
 
 
@@ -148,28 +141,11 @@ int main(void)
 	devFreq->I2cHandle=&I2c1Handle;
 	devAmp->I2cHandle=&I2c1Handle;
 
-	uint32_t i;
-	/* STM32L4xx HAL library initialization:
-       - Configure the Flash prefetch
-       - Systick timer is configured by default as source of time base, but user
-         can eventually implement his proper time base source (a general purpose
-         timer for example or other time source), keeping in mind that Time base
-         duration should be kept 1ms since PPP_TIMEOUT_VALUEs are defined and
-         handled in milliseconds basis.
-       - Set NVIC Group Priority to 4
-       - Low Level Initialization
-	 */
 	HAL_Init();
 
 	/* Configure the system clock to have a frequency of 80 MHz */
 	SystemClock_Config();
 	MX_GPIO_Init();
-	/* Configure LED4 */
-	//BSP_LED_Init(LED4);
-	//	HAL_GPIO_TogglePin(LD_Green_GPIO_Port,LD_Green_Pin);
-	//	HAL_Delay(500);
-	//	HAL_GPIO_TogglePin(LD_Green_GPIO_Port,LD_Green_Pin);
-	//SineWave_generate(hsin, &dataFreq, &dataAmp);
 
 	/* Initialize DFSDM channels and filter for record */
 	DFSDM_Init();
@@ -183,73 +159,22 @@ int main(void)
 		Error_Handler();
 	}
 
-	//statusDev = VL53L1X_init(devFreq);
-	//HAL_GPIO_WritePin(XSHUT_GPIO_Port, XSHUT_Pin, GPIO_PIN_SET);
-	//HAL_Delay(100);
-	//statusDev = VL53L1X_init(devFreq);
-	//HAL_GPIO_WritePin(XSHUT_Pin, XSHUT_GPIO_Port, GPIO_PIN_SET);
+
+
 	statusTheremin = thereminInit(devFreq, devAmp);
-//	HAL_Delay(100);
-	//VL53L1X_startContinuous(devFreq, 20);
-//	HAL_Delay(100);
-//	SineWave_generate(hsin, &dataFreq, &dataAmp);
-////
-//	audio_drv->Play(AUDIO_I2C_ADDRESS, (uint16_t *) &lookup[0], hsin->sampleNum);
-////
-//	HAL_SAI_Transmit_DMA(&SaiHandle, (uint8_t *) &lookup[0], hsin->sampleNum);
-//
-//	/* Start loopback */
+
+
+
+	SineWave_generate(hsin, &dataFreq, &dataAmp);
+	audio_drv->Play(AUDIO_I2C_ADDRESS, (uint16_t *) &lookup[0], hsin->sampleNum);
+	HAL_SAI_Transmit_DMA(&SaiHandle, (uint8_t *) &lookup[0], hsin->sampleNum);
+
 	while(1)
 	{
 		VL53L1X_read(devFreq, &dataFreq ,&resultsFreq);
 		VL53L1X_read(devAmp, &dataAmp ,&resultsAmp);
-//
+
 		SineWave_generate(hsin, &dataFreq, &dataAmp);
-
-
-		//HAL_Delay(5);
-
-//		memcpy(lookup, prepare, 2*hsin->sampleNum);
-//
-//		HAL_SAI_Transmit_DMA(&SaiHandle, (uint8_t *) &lookup[0], hsin->sampleNum);
-
-
-
-		//	  HAL_GPIO_TogglePin(LD_Green_GPIO_Port,LD_Green_Pin);
-		//	  	HAL_Delay(500);
-		//	  	HAL_GPIO_TogglePin(LD_Green_GPIO_Port,LD_Green_Pin);
-		//    if(DmaRecHalfBuffCplt == 1)
-		//    {
-		//      /* Store values on Play buff */
-		//      for(i = 0; i < 1024; i++)
-		//      {
-		//        PlayBuff[2*i]     = SaturaLH((RecBuff[i] >> 8), -32768, 32767);
-		//        PlayBuff[(2*i)+1] = PlayBuff[2*i];
-		//      }
-		//      if(PlaybackStarted == 0)
-		//      {
-		//        if(0 != audio_drv->Play(AUDIO_I2C_ADDRESS, (uint16_t *) &PlayBuff[0], 4096))
-		//        {
-		//          Error_Handler();
-		//        }
-		//        if(HAL_OK != HAL_SAI_Transmit_DMA(&SaiHandle, (uint8_t *) &PlayBuff[0], 4096))
-		//        {
-		//          Error_Handler();
-		//        }
-		//        PlaybackStarted = 1;
-		//      }
-		//      DmaRecHalfBuffCplt  = 0;
-		//    }
-		//    if(DmaRecBuffCplt == 1)
-		//    {
-		//      /* Store values on Play buff */
-		//      for(i = 1024; i < 2048; i++)
-		//      {
-		//        PlayBuff[2*i]     = SaturaLH((RecBuff[i] >> 8), -32768, 32767);
-		//        PlayBuff[(2*i)+1] = PlayBuff[2*i];
-		//      }
-		//      DmaRecBuffCplt  = 0;
-		//    }
 	}
 }
 
@@ -579,7 +504,7 @@ void HAL_DFSDM_FilterRegConvCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filt
 void HAL_SAI_TxCpltCallback(SAI_HandleTypeDef *hsai)
 {
 	memcpy(lookup, prepare, 2*hsin->sampleNum);
-	HAL_SAI_Transmit_DMA(hsai, &lookup[0], hsin->sampleNum);
+	HAL_SAI_Transmit_DMA(hsai, (uint8_t*)&lookup[0], hsin->sampleNum);
 }
 
 
