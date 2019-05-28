@@ -97,12 +97,35 @@ SineWaveHandler hsin = &sine;
 VL53L1X_Dev_t freq;
 VL53L1X_DEV devFreq = &freq;
 
+VL53L1X_Dev_t amp;
+VL53L1X_DEV devAmp = &amp;
+
 /* Private function prototypes ----------------------------------------------*/
 void SystemClock_Config(void);
 static void DFSDM_Init(void);
 static void Playback_Init(void);
 
 /* Private functions ---------------------------------------------------------*/
+static void MX_GPIO_Init(void)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(XSHUT_GPIO_Port, XSHUT_Pin, GPIO_PIN_RESET);
+
+
+  /*Configure GPIO pin : XSHUT_Pin */
+  GPIO_InitStruct.Pin = XSHUT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(XSHUT_GPIO_Port, &GPIO_InitStruct);
+
+}
 
 /**
  * @brief  Main program
@@ -115,7 +138,15 @@ int main(void)
 	RangeStatus statusFreq;
 	ResultBuffer resultsFreq;
 
+	RangingData dataAmp;
+	RangeStatus statusAmp;
+	ResultBuffer resultsAmp;
+
+	thereminStatus statusTheremin;
+	VL53L1X_Status statusDev;
+
 	devFreq->I2cHandle=&I2c1Handle;
+	devAmp->I2cHandle=&I2c1Handle;
 
 	uint32_t i;
 	/* STM32L4xx HAL library initialization:
@@ -132,13 +163,13 @@ int main(void)
 
 	/* Configure the system clock to have a frequency of 80 MHz */
 	SystemClock_Config();
-
+	MX_GPIO_Init();
 	/* Configure LED4 */
 	//BSP_LED_Init(LED4);
 	//	HAL_GPIO_TogglePin(LD_Green_GPIO_Port,LD_Green_Pin);
 	//	HAL_Delay(500);
 	//	HAL_GPIO_TogglePin(LD_Green_GPIO_Port,LD_Green_Pin);
-	SineWave_generate(hsin, &dataFreq);
+	//SineWave_generate(hsin, &dataFreq, &dataAmp);
 
 	/* Initialize DFSDM channels and filter for record */
 	DFSDM_Init();
@@ -152,22 +183,28 @@ int main(void)
 		Error_Handler();
 	}
 
-	statusFreq = VL53L1X_init(devFreq);
-	HAL_Delay(100);
-	VL53L1X_startContinuous(devFreq, 20);
-	HAL_Delay(100);
-
-	audio_drv->Play(AUDIO_I2C_ADDRESS, (uint16_t *) &lookup[0], hsin->sampleNum);
-
-	HAL_SAI_Transmit_DMA(&SaiHandle, (uint8_t *) &lookup[0], hsin->sampleNum);
-
-	/* Start loopback */
+	//statusDev = VL53L1X_init(devFreq);
+	//HAL_GPIO_WritePin(XSHUT_GPIO_Port, XSHUT_Pin, GPIO_PIN_SET);
+	//HAL_Delay(100);
+	//statusDev = VL53L1X_init(devFreq);
+	//HAL_GPIO_WritePin(XSHUT_Pin, XSHUT_GPIO_Port, GPIO_PIN_SET);
+	statusTheremin = thereminInit(devFreq, devAmp);
+//	HAL_Delay(100);
+	//VL53L1X_startContinuous(devFreq, 20);
+//	HAL_Delay(100);
+//	SineWave_generate(hsin, &dataFreq, &dataAmp);
+////
+//	audio_drv->Play(AUDIO_I2C_ADDRESS, (uint16_t *) &lookup[0], hsin->sampleNum);
+////
+//	HAL_SAI_Transmit_DMA(&SaiHandle, (uint8_t *) &lookup[0], hsin->sampleNum);
+//
+//	/* Start loopback */
 	while(1)
 	{
 		VL53L1X_read(devFreq, &dataFreq ,&resultsFreq);
-
-
-		SineWave_generate(hsin, &dataFreq);
+		VL53L1X_read(devAmp, &dataAmp ,&resultsAmp);
+//
+		SineWave_generate(hsin, &dataFreq, &dataAmp);
 
 
 		//HAL_Delay(5);

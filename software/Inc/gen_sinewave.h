@@ -46,7 +46,7 @@ typedef SineWave *SineWaveHandler;
 //SineWaveHandler hsin = &sin;
 
 void SineWave_init(SineWaveHandler hsin);
-void SineWave_generate(SineWaveHandler hsin, RangingData *data);
+void SineWave_generate(SineWaveHandler hsin, RangingData *dataFreq, RangingData *dataAmp);
 //void SineWave_adjustFreq(SineWaveHandler hsin,  TIM_HandleTypeDef *htim);
 
 

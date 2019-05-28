@@ -18,19 +18,17 @@ void SineWave_init(SineWaveHandler hsin)
 	hsin->freq = 1000; //range
 }
 
-void SineWave_generate(SineWaveHandler hsin, RangingData *data)
+void SineWave_generate(SineWaveHandler hsin, RangingData *dataFreq, RangingData *dataAmp)
 {
 //	memcpy(hsin->data, lookup, LOOKUP_SIZE);
 //	hsin->amp = 1.0*data->range_mm/1700;
-//	hsin->freq = 1.0*data->range_mm;
+	//hsin->freq = 1.0*dataFreq->range_mm;
 	//hsin->amp = 40/RANGE_MAX(data->range_mm, 40, 400);
 	//hsin->amp=0.2;
-	//hsin->freq = RANGE_MAX(data->range_mm, 40, 400);
-	float32_t temp = data->range_mm*0.001;
+	hsin->freq = RANGE_MAX(dataFreq->range_mm, 40, 400);
+	float32_t temp = dataAmp->range_mm*0.001;
 	hsin->amp = RANGE_MAX(temp, 0.1, 0.4);
 	hsin->amp *=2;
-	//hsin->amp = 40/RANGE_MAX(data->range_mm, 40, 400);
-	hsin->freq=300;
 	hsin->sampleNum = hsin->freq;
 	float32_t step = 2.0*PI/hsin->sampleNum;
 	hsin->sampleNum = 2*hsin->sampleNum;

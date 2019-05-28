@@ -49,6 +49,9 @@
 /* Exported functions ------------------------------------------------------- */
 void Error_Handler(void);
 
+#define XSHUT_Pin GPIO_PIN_0
+#define XSHUT_GPIO_Port GPIOA
+
 #endif /* __MAIN_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
