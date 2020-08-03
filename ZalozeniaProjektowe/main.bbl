@@ -1,0 +1,29 @@
+\begin{thebibliography}{1}
+
+\bibitem{CS43L22}
+CirrusLogic.
+\newblock {CS43L22 Datasheet}.
+\newblock 2010.
+
+\bibitem{AN3126}
+STMicroelectronics.
+\newblock {AN3126 Application note Audio and waveform generation using the DAC
+  in STM32 microcontrollers}.
+\newblock Maj 2017.
+
+\bibitem{DevBoard}
+STMicroelectronics.
+\newblock {UM1879 User manual Discovery kit with STM32L476VG MCU}.
+\newblock Maj 2017.
+
+\bibitem{MCU}
+STMicroelectronics.
+\newblock {STM32L476xx Datasheet}.
+\newblock Maj 2018.
+
+\bibitem{VL53L1X}
+STMicroelectronics.
+\newblock {VL53L1X Datasheet}.
+\newblock 2018.
+
+\end{thebibliography}

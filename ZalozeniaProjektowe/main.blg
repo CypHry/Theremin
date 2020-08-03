@@ -1,0 +1,56 @@
+This is BibTeX, Version 0.99d (TeX Live 2017/Debian)
+Capacity: max_strings=100000, hash_size=100000, hash_prime=85009
+The top-level auxiliary file: main.aux
+The style file: plabbrv.bst
+Database file #1: bibliografia.bib
+Warning--string name "november" is undefined
+--line 18 of file bibliografia.bib
+Warning--string name "march" is undefined
+--line 27 of file bibliografia.bib
+Warning--empty note in CS43L22
+Warning--empty note in AN3126
+Warning--empty note in DevBoard
+Warning--empty note in MCU
+Warning--empty note in VL53L1X
+You've used 5 entries,
+            2129 wiz_defined-function locations,
+            523 strings with 4089 characters,
+and the built_in function-call counts, 901 in all, are:
+= -- 90
+> -- 35
+< -- 0
++ -- 15
+- -- 10
+* -- 48
+:= -- 189
+add.period$ -- 15
+call.type$ -- 5
+change.case$ -- 20
+chr.to.int$ -- 0
+cite$ -- 10
+duplicate$ -- 30
+empty$ -- 56
+format.name$ -- 10
+if$ -- 161
+int.to.chr$ -- 0
+int.to.str$ -- 5
+missing$ -- 0
+newline$ -- 28
+num.names$ -- 10
+pop$ -- 10
+preamble$ -- 1
+purify$ -- 15
+quote$ -- 0
+skip$ -- 25
+stack$ -- 0
+substring$ -- 25
+swap$ -- 0
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 20
+warning$ -- 5
+while$ -- 10
+width$ -- 6
+write$ -- 47
+(There were 7 warnings)
